@@ -27,6 +27,10 @@
   "naver-map": { "type": "remote", "name": "Naver Map Direction MCP", "env": ["NAVER_MAP_GEO_API_URL", "CLIENT_ID", "CLIENT_SECRET"] },
   "playwright": { "type": "builtin" },
   "puppeteer": { "type": "builtin" },
+  "mcp-browser": { "type": "remote", "name": "Puppeteer-based Browser MCP" },
+  "mcp-web": { "type": "remote", "name": "Playwright-based Web Browser Server" },
+  "browser-use": { "type": "remote", "name": "Vision-capable Browser Automation (Persistent)" },
+  "ai-vision-debug": { "type": "remote", "name": "AI Vision Debug MCP Server" },
   "screenshot": { "type": "remote", "name": "Screenshot MCP Server" }
   }
 }
