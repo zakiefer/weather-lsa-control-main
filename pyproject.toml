@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weather-lsa-control"
+version = "0.1.1"
+description = "Control Google Ads campaigns based on NWS severe weather alerts"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Your Team" }]
+dependencies = [
+  "requests>=2.31.0",
+  "python-dotenv>=1.0.0",
+  "google-auth>=2.33.0",
+  "google-auth-oauthlib>=1.2.0",
+  "prometheus-client>=0.20.0",
+  "sentry-sdk>=2.8.0",
+  "opentelemetry-sdk>=1.27.0",
+  "opentelemetry-exporter-otlp>=1.27.0",
+  "opentelemetry-instrumentation-requests>=0.48b0",
+  "pydantic>=2.8.2",
+  "pydantic-settings>=2.4.0",
+  "keyring>=25.3.0",
+  "PyYAML>=6.0.2",
+  "APScheduler>=3.10.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4.0",
+  "ruff>=0.5.5",
+  "mypy>=1.10.0",
+]
+postgres = [
+  "psycopg2-binary>=2.9.9",
+]
+
+[project.scripts]
+weather-lsa = "src.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+# Limit discovery to the dedicated tests directory and standard naming
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+filterwarnings = [
+  # Third-party deprecations that don't affect runtime today
+  "ignore:Type google\\._upb\\._message\\..* uses PyType_Spec.*:DeprecationWarning",
+  "ignore:pkg_resources is deprecated as an API.*:UserWarning",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "N"]
+extend-select = ["Q"]
+ignore = ["E203"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/__main__.py" = ["E501", "I001", "UP015", "F401"]
+"src/config/settings.py" = ["I001", "E501"]
+"src/db.py" = ["I001", "E501"]
+"ui/pages/*.py" = ["E402", "E501", "I001", "Q000", "UP032", "N806", "F405"]
+"ui/Dashboard.py" = ["N999", "E501"]
+"ui/_bootstrap.py" = ["E402", "UP031", "N814"]
+"ui/_dashboard.py" = ["E402"]
+"ui/app.py" = ["E402"]
+"ui/map_layers.py" = []
+"ui/overlay_status.py" = []
+"ui/utils.py" = ["UP035"]
+"tests/*.py" = ["E501"]
+"tools/verify_ingest.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
+docstring-quotes = "double"
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+disallow_untyped_defs = false
+no_warn_no_return = true
+warn_unused_ignores = false
+exclude = ["tests/", "ui/"]
+
+[[tool.mypy.overrides]]
+module = ["src.db"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.weather_monitor"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.__main__"]
+ignore_errors = true

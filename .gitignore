@@ -1,0 +1,40 @@
+tmp/
+*.pyc
+__pycache__/
+.pytest_cache/
+*.log
+logs/*.jsonl
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment files
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+src/__pycache__/
+.mypy_cache/
+.ruff_cache/
+
+# Editor/OS
+.idea/
+.vscode/
+.DS_Store
+
+# Packaging/build artifacts
+*.egg-info/
+src/*.egg-info/
+
+# App logs and runtime artifacts
+logs/
+src/logs/
+data/
+*.db
+
+# OAuth secrets (local only)
+src/client_secret*.json
+client_secret*.json
+secrets/

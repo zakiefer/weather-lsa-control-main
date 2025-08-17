@@ -1,0 +1,17 @@
+[Unit]
+Description=Weather LSA Control Scheduler
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/weather-lsa-control
+EnvironmentFile=/etc/weather-lsa.env
+ExecStart=/usr/bin/env python -m src --scheduler
+Restart=on-failure
+RestartSec=10
+User=weather
+Group=weather
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-lsa
+  labels:
+    app: weather-lsa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-lsa
+  template:
+    metadata:
+      labels:
+        app: weather-lsa
+    spec:
+      containers:
+        - name: weather-lsa
+          image: weather-lsa-control:latest
+          imagePullPolicy: IfNotPresent
+          args: ["python", "-m", "src", "--scheduler"]
+          env:
+            - name: HEALTH_PORT
+              value: "8080"
+            - name: METRICS_PORT
+              value: "9108"
+            # Add Ads and app env as needed, or use a ConfigMap/Secret refs
+          ports:
+            - name: http-health
+              containerPort: 8080
+            - name: http-metrics
+              containerPort: 9108
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http-health
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http-health
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: secrets
+              mountPath: /app/secrets
+              readOnly: true
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: secrets
+          secret:
+            secretName: weather-lsa-secrets
+        - name: data
+          persistentVolumeClaim:
+            claimName: weather-lsa-data

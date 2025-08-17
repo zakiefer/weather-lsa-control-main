@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weather-lsa-worker
+spec:
+  schedule: "*/1 * * * *" # every minute
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: queue-drain
+              image: weather-lsa-control:latest
+              imagePullPolicy: IfNotPresent
+              args: ["python", "-m", "src", "--drain-queue"]
+              env:
+                - name: HEALTH_PORT
+                  value: "0"
+                - name: METRICS_PORT
+                  value: "0"
+              volumeMounts:
+                - name: secrets
+                  mountPath: /app/secrets
+                  readOnly: true
+                - name: data
+                  mountPath: /app/data
+          volumes:
+            - name: secrets
+              secret:
+                secretName: weather-lsa-secrets
+            - name: data
+              persistentVolumeClaim:
+                claimName: weather-lsa-data

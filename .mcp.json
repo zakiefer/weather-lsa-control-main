@@ -1,0 +1,19 @@
+{
+  "servers": {
+    "fs": { "type": "builtin" },
+    "git": { "type": "builtin" },
+    "issues": { "type": "builtin" },
+    "tasks": { "type": "builtin" },
+
+    "pytest": { "command": "pytest" },
+    "coverage": { "command": "coverage run -m pytest" },
+
+    "docker": { "command": "docker" },
+    "kubernetes": { "command": "kubectl" },
+    "ci": { "command": "gh workflow run" },
+
+    "sql": { "command": "sqlite3" },
+    "http": { "type": "builtin" },
+    "secrets": { "type": "builtin" }
+  }
+}

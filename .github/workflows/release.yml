@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build distributions
+        run: |
+          python -m pip install -U pip build twine
+          python -m build
+          python -m twine check dist/*
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG_NAME="${GITHUB_REF_NAME}"
+          VERSION_NO_V="${TAG_NAME#v}"
+          OUT="release_notes.md"
+          if [ -f CHANGELOG.md ]; then
+            awk -v ver="$VERSION_NO_V" '
+              BEGIN{print_section=0}
+              /^## \[/{
+                if (print_section==1) { exit }
+              }
+              $0 ~ "^## \\[" ver "\\]" { print_section=1 }
+              print_section==1 { print }
+            ' CHANGELOG.md > "$OUT" || true
+            # If empty fallback, write minimal notes
+            if [ ! -s "$OUT" ]; then
+              echo "## ${TAG_NAME}" > "$OUT"
+              echo "Release ${TAG_NAME}." >> "$OUT"
+            fi
+          else
+            echo "## ${TAG_NAME}" > "$OUT"
+            echo "Release ${TAG_NAME}." >> "$OUT"
+          fi
+          echo "notes_file=$OUT" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.notes_file }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weather-lsa-weather
+spec:
+  schedule: "*/5 * * * *" # every 5 minutes
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: weather-check
+              image: weather-lsa-control:latest
+              imagePullPolicy: IfNotPresent
+              args: ["python", "-m", "src"]
+              env:
+                - name: HEALTH_PORT
+                  value: "0"
+                - name: METRICS_PORT
+                  value: "0"
+              volumeMounts:
+                - name: secrets
+                  mountPath: /app/secrets
+                  readOnly: true
+                - name: data
+                  mountPath: /app/data
+          volumes:
+            - name: secrets
+              secret:
+                secretName: weather-lsa-secrets
+            - name: data
+              persistentVolumeClaim:
+                claimName: weather-lsa-data

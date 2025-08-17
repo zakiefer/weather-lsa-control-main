@@ -1,0 +1,1 @@
+pip 25.2 from /Users/program/Downloads/weather-lsa-control-main/.venv/lib/python3.13/site-packages/pip (python 3.13)

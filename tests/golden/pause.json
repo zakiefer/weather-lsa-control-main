@@ -1,0 +1,27 @@
+[
+  {
+    "method": "POST",
+    "urlSuffix": "/googleAds:search",
+    "query": "SELECT campaign.id, campaign.advertising_channel_type FROM campaign WHERE campaign.id = 1111111111 LIMIT 1"
+  },
+  {
+    "method": "POST",
+    "urlSuffix": "/campaigns:mutate?validateOnly=true",
+    "body": {
+      "operations": [
+        {
+          "update": {
+            "resourceName": "customers/0000000000/campaigns/1111111111",
+            "status": "PAUSED"
+          },
+          "updateMask": "status"
+        }
+      ]
+    }
+  },
+  {
+    "method": "POST",
+    "urlSuffix": "/googleAds:search",
+    "query": "SELECT campaign.status FROM campaign WHERE campaign.id = 1111111111 LIMIT 1"
+  }
+]

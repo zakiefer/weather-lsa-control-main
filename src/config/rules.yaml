@@ -1,0 +1,22 @@
+# Starter rules for Weather LSA Control
+# Format supports YAML or JSON. These are conservative defaults.
+# Actions: ENABLE, PAUSE, NOOP
+# Fields: name, severities, events, counties (FIPS), min_duration, action
+
+rules:
+  - name: Enable on severe warnings in target counties
+    severities: [Severe, Extreme]
+    events: ["Severe Thunderstorm Warning", "Tornado Warning"]
+    # Let monitor’s own targeting restrict counties; include a short duration gate
+    min_duration: 0m
+    action: ENABLE
+
+  - name: Pause only for extreme tornado warnings
+    severities: [Extreme]
+    events: ["Tornado Warning"]
+    min_duration: 10m
+    action: PAUSE
+
+  - name: Ignore minor/other alerts
+    events: ["Special Weather Statement", "Heat Advisory"]
+    action: NOOP

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-lsa-config
+  labels:
+    app: weather-lsa
+data:
+  PROFILE: "prod"
+  HEALTH_PORT: "8080"
+  METRICS_PORT: "9108"
+  REQUIRE_LOCAL_SERVICES_ONLY: "true"
+  VALIDATE_GATE: "true"
+  SAFE_MODE: "false"
+  ENABLE_NOTIFICATIONS: "true"
+  ENABLE_EMAIL: "true"
+  EMAIL_FROM: "ops@example.com"
+  EMAIL_TO: "ops@example.com"
+  # Google Ads env as needed (non-sensitive IDs can go here)
+  GOOGLE_ADS_CUSTOMER_ID: "0000000000"
+  GOOGLE_ADS_CAMPAIGN_ID: "1111111111"
