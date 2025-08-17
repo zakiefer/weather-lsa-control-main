@@ -14,6 +14,10 @@
 
     "sql": { "command": "sqlite3" },
     "http": { "type": "builtin" },
-    "secrets": { "type": "builtin" }
+  "secrets": { "type": "builtin" },
+
+  "browser": { "type": "remote", "name": "Browser MCP" },
+  "a11y": { "type": "remote", "name": "A11y MCP Server" },
+  "fetch": { "type": "remote", "name": "Fetch MCP Server" }
   }
 }
