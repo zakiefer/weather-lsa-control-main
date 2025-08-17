@@ -12,12 +12,21 @@
     "kubernetes": { "command": "kubectl" },
     "ci": { "command": "gh workflow run" },
 
-    "sql": { "command": "sqlite3" },
-    "http": { "type": "builtin" },
+  "sql": { "command": "sqlite3" },
+  "http": { "type": "builtin" },
   "secrets": { "type": "builtin" },
 
   "browser": { "type": "remote", "name": "Browser MCP" },
   "a11y": { "type": "remote", "name": "A11y MCP Server" },
-  "fetch": { "type": "remote", "name": "Fetch MCP Server" }
+  "fetch": { "type": "builtin" },
+
+  "google-maps": { "type": "remote", "repo": "octahaidra/google-maps-MCP", "env": ["GOOGLE_MAPS_API_KEY"] },
+  "mapbox": { "type": "remote", "name": "Mapbox MCP Server", "env": ["MAPBOX_ACCESS_TOKEN"] },
+  "travel-planner": { "type": "remote", "name": "Travel Planner MCP", "env": ["GOOGLE_MAPS_API_KEY"] },
+  "map-traveler": { "type": "remote", "name": "Map Traveler MCP" },
+  "naver-map": { "type": "remote", "name": "Naver Map Direction MCP", "env": ["NAVER_MAP_GEO_API_URL", "CLIENT_ID", "CLIENT_SECRET"] },
+  "playwright": { "type": "builtin" },
+  "puppeteer": { "type": "builtin" },
+  "screenshot": { "type": "remote", "name": "Screenshot MCP Server" }
   }
 }
