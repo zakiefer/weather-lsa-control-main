@@ -38,3 +38,17 @@ data/
 src/client_secret*.json
 client_secret*.json
 secrets/
+
+# E2E artifacts
+tests/e2e/.auth/
+docs/img/e2e/
+docs/a11y/
+
+# Agent memory / artifacts
+ops/logs/agent_actions.jsonl
+ops/logs/agent_actions.jsonl.*.rotated
+tests/e2e/.auth/
+docs/img/e2e/
+tests/e2e/__screenshots__/
+playwright-report/
+test-results/

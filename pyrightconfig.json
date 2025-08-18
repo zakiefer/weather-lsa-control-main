@@ -3,6 +3,9 @@
     "src",
     "tests"
   ],
+  "exclude": [
+    "tests/e2e"
+  ],
   "venvPath": ".",
   "venv": ".venv",
   "executionEnvironments": [
@@ -12,5 +15,6 @@
         "."
       ]
     }
-  ]
+  ],
+  "typeCheckingMode": "basic"
 }

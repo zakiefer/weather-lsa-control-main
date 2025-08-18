@@ -22,6 +22,7 @@ require_auth()
 import folium
 from folium import plugins
 from streamlit_folium import st_folium
+from ui.testids import testid
 
 from src.__main__ import get_credentials  # type: ignore
 from src.config.settings import (
@@ -373,13 +374,13 @@ with SB.expander("Layers & styles", expanded=True):
     if not st.session_state.get("reduce_flash", True):
         with SB.form("basemap_form"):
             st.selectbox(
-                "Basemap",
+                testid("basemap_select") + "Basemap",
                 options=list(basemap_options.keys()),
                 index=list(basemap_options.keys()).index(st.session_state.get("map_basemap", "Light")),
                 key="map_basemap",
                 help="Change the base map style",
             )
-            st.form_submit_button("Apply basemap")
+            st.form_submit_button(testid("basemap_apply") + "Apply basemap")
     else:
         st.caption("Tip: switch basemaps via the Layers control on the map to avoid reruns.")
 
@@ -511,7 +512,7 @@ if not st.session_state.get("reduce_flash", True):
                 _rs = qp_rsrc if qp_rsrc is not None else "iem"
                 st.session_state["map_radar_source"] = _rs if _rs in ("iem", "rv") else "iem"
             st.selectbox(
-                "Radar source",
+                testid("radar_source") + "Radar source",
                 options=["iem", "rv"],
                 index=0 if (st.session_state.get("map_radar_source", "iem") == "iem") else 1,
                 format_func=lambda v: "IEM NEXRAD" if v == "iem" else "RainViewer",
@@ -528,14 +529,14 @@ if not st.session_state.get("reduce_flash", True):
             # don't render the sidebar slider. Use the in-map control instead.
             # Always offer a slider in non-reduce_flash mode so users can adjust explicitly
             st.slider(
-                "Opacity",
+                testid("radar_opacity") + "Opacity",
                 min_value=10,
                 max_value=100,
                 value=st.session_state.get("map_radar_opacity", 60),
                 step=5,
                 key="map_radar_opacity",
             )
-        st.form_submit_button("Apply radar")
+        st.form_submit_button(testid("radar_apply") + "Apply radar")
     # Always read the applied state after the form
     radar_on = bool(st.session_state.get("map_radar", False))
 else:
@@ -1045,16 +1046,16 @@ except Exception:
 # Satellite overlays
 with SB.expander("Satellite"):
     if not st.session_state.get("reduce_flash", True):
-        with SB.form("sat_form"):
+    with SB.form("sat_form"):
             sat_true = st.checkbox(
                 "GOES-East Truecolor", value=qp_sat not in ("0", "false", "no") if qp_sat is not None else False
             )
             sat_ir = st.checkbox(
                 "GOES-East IR", value=qp_sati not in ("0", "false", "no") if qp_sati is not None else False
             )
-            sat_op = st.slider("Opacity", min_value=10, max_value=100, value=60, step=5, key="sat_opacity")
+            sat_op = st.slider(testid("sat_opacity") + "Opacity", min_value=10, max_value=100, value=60, step=5, key="sat_opacity")
             st.caption("Tip: use the in-map Satellite Opacity slider (top-right) for smooth fades without reruns.")
-            st.form_submit_button("Apply satellite")
+            st.form_submit_button(testid("sat_apply") + "Apply satellite")
     else:
         # Read initial state from URL seeds; toggle in-map to avoid reruns
         sat_true = qp_sat not in ("0", "false", "no") if qp_sat is not None else False
@@ -1146,14 +1147,14 @@ with SB.expander("Satellite"):
 # Lightning (GOES GLM Flash Extent Density)
 with SB.expander("Lightning (GLM)"):
     if not st.session_state.get("reduce_flash", True):
-        with SB.form("glm_form"):
+    with SB.form("glm_form"):
             glm_on = st.checkbox(
                 "Show GLM Flash Extent Density",
                 value=qp_glm not in ("0", "false", "no") if qp_glm is not None else False,
             )
-            glm_op = st.slider("Opacity", min_value=10, max_value=100, value=60, step=5, key="glm_opacity")
+            glm_op = st.slider(testid("glm_opacity") + "Opacity", min_value=10, max_value=100, value=60, step=5, key="glm_opacity")
             st.caption("Tip: use the in-map GLM Opacity slider (top-right) for smooth fades without reruns.")
-            st.form_submit_button("Apply GLM")
+            st.form_submit_button(testid("glm_apply") + "Apply GLM")
     else:
         glm_on = qp_glm not in ("0", "false", "no") if qp_glm is not None else False
         glm_op = int(st.session_state.get("glm_opacity", 60))

@@ -11,3 +11,5 @@ pip-audit==2.7.3
 bandit==1.7.9
 detect-secrets==1.5.0
 types-cachetools
+playwright==1.47.0
+pytest-playwright==0.5.1
