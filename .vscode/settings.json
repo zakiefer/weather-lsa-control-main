@@ -1,0 +1,124 @@
+{
+  // Multi-command helpers
+  "multiCommand.commands": [
+    {
+      "command": "local.reloadWindow",
+      "sequence": ["workbench.action.reloadWindow"]
+    }
+  ],
+  // Reduce Problems panel noise from docs, logs, and generated files
+  "cSpell.enabled": true,
+  "cSpell.language": "en,en-US",
+  "cSpell.words": [
+    "adwords",
+    "adsapi",
+    "APScheduler",
+    "backoff",
+    "canary",
+    "cronjob",
+    "csvs",
+    "datetime",
+    "debounced",
+    "demote",
+    "Folium",
+    "geojson",
+    "GLM",
+    "GOES",
+    "Grafana",
+    "httpx",
+    "jsonl",
+    "kubeconfig",
+    "kubernetes",
+    "LSA",
+    "LSR",
+    "mappings",
+    "markdownlint",
+    "MD013",
+    "NOAA",
+    "NHC",
+    "NWS",
+    "OpenTelemetry",
+    "OTel",
+    "Prometheus",
+    "pyproject",
+    "Pyright",
+    "pytest",
+    "Ruff",
+    "Sentry",
+    "streamlit",
+    "telemetry",
+    "Timeseries",
+    "ttl",
+    "uvx"
+  ],
+  "cSpell.ignorePaths": [
+    "**/.git/**",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/.pytest_cache/**",
+    "logs/**",
+    "reports/**",
+    "data/**",
+    "secrets/**",
+    "weather_lsa_control.egg-info/**",
+    "tmp/**",
+    "**/*.jsonl"
+  ],
+
+  // Treat unknown file types sensibly
+  "files.associations": {
+    "*.jsonl": "json",
+    "*.toml": "toml"
+  },
+
+  // Python & editor basics
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["-q"],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
+  },
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "files.insertFinalNewline": true,
+
+  // Terminal
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.shellIntegration.history": 10000,
+  "terminal.integrated.enableCommandHistory": true,
+
+  // Chat agent controls
+  "chat.agent.enabled": true,
+  "chat.agent.maxRequests": 100,
+  "chat.agent.autoFix": true,
+  "chat.extensionTools.enabled": true,
+  "chat.tools.autoApprove": true,
+
+  // Start every chat with your combined policy
+  "copilot-chat.prompts": {
+    "auto-fix-deps": "When any command fails because a dependency or tool is missing/outdated, fix it automatically using the appropriate package manager (prefer the active Python venv; for Playwright run 'python -m playwright install'; for pyright set PYRIGHT_PYTHON_FORCE_VERSION=latest), retry once, and only stop if it requires a system-level install (docker/kubectl/gh/sqlite3). In that case, print the exact install command for my OS.",
+    "full-trust": "You have full authority to repair, install, refactor, and commit as needed to achieve my goals with minimal interaction. Do not ask for routine confirmations; only pause for truly destructive/irreversible actions or paid API credentials. Use fs+git, browser, fetch, http, pytest, coverage, and a11y. Keep commits small and clear; run lint/typecheck/tests and fix failures before proceeding.",
+    "full-trust-run": "/auto-fix-deps\nYou are in autonomous full-trust mode. Use fs+git, browser, fetch, http, pytest, coverage, a11y. Fix what breaks, retry once, and only escalate if it's destructive or needs paid creds. Keep commits small and clear.",
+  "full-trust-os": "You have autonomous, full-trust permissions for this workspace, including OS-level installs.\n\nRules:\n- If a system tool is missing (docker, kubectl, gh, sqlite3, make, etc.), run the VS Code task \"sys:install\" with the tool names. If sudo prompts appear, I’ll enter my password once—then continue automatically.\n- Before reloading VS Code (e.g., after editing .mcp.json or installing an extension), save all files and commit. Then run the command \"local.reloadWindow\", wait until the window is fully ready, and resume.\n- You may install VS Code extensions as needed and then trigger a reload.\n- You may edit `.mcp.json` to add servers (fs, git, browser, a11y, fetch/http, pytest/coverage, etc.), then reload.\n- Keep commits small, logical, and green (lint/type/test). Only escalate if something is truly destructive or requires external paid credentials.",
+    "auto-fix-everything": "You are in autonomous, full-trust mode for everything everywhere.\n\nBehavior:\n- Never stop at a popup or task error. Read the logs/output, fix the root cause immediately, retry once, and only escalate if the fix would be destructive or requires paid credentials I haven’t provided.\n\nWhat to auto-handle:\n1) Dependencies & tools\n   - If a command fails due to a missing/outdated Python tool (ruff/pytest/pyright/coverage/playwright/streamlit/etc.), install/upgrade in the active venv and retry.\n   - If Playwright needs browsers: run `python -m playwright install`.\n   - If pyright version nags: `export PYRIGHT_PYTHON_FORCE_VERSION=latest` and upgrade.\n   - If a safe dev package is missing (ModuleNotFoundError), add it to requirements and install.\n   - If a system tool is missing (docker/kubectl/gh/sqlite3/make): run the VS Code task **sys:install** with the tool names; if sudo prompts, I’ll enter my password once, then continue.\n\n2) Extensions & prompts\n   - If an extension (Kubernetes, Docker, etc.) prompts for setup, enable/configure only if the project clearly uses it (files/configs present). Otherwise **Disable (Workspace)** to stop nagging.\n   - If an extension is required, install it, save, and reload.\n\n3) VS Code reloads\n   - When a reload is required (after editing `.mcp.json`, installing extensions, or enabling new MCP servers), first save all files and commit. Then run the **local.reloadWindow** command, wait until the window is ready, and resume.\n\n4) Tasks & builds\n   - On task errors (lint/typecheck/test/build): fix code or configs until green. Re-run the failed task, then proceed.\n   - Keep commits small and logical: config → code → tests → docs. Always run ruff/pyright/pytest and make green before moving on.\n\n5) Output\n   - For each issue: show a concise log: “Detected → Fixed → Verified”. At the end, list what changed and what’s next.\n\nGuardrails:\n- No plaintext secrets in code. Use env/secret store.\n- Do not perform destructive ops (mass deletes, OS reconfiguration) without asking."
+  },
+  "copilot-chat.startSessionWithPrompt": "/auto-fix-everything",
+
+  // Copilot quality-of-life
+  "github.copilot.enable": {
+    "*": true
+  },
+  "github.copilot.editor.enableAutoCompletions": true,
+
+  // Python analysis adjustments
+  "python.analysis.indexing": false,
+  "python.analysis.autoImportCompletions": false,
+
+  // Language specific
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  }
+}
