@@ -1,3 +1,6 @@
-# Hidden placeholder
+---
+title: Deprecated — Use Map
+---
 
-This file is intentionally hidden (underscore prefix) so Streamlit ignores it.
+This placeholder is deprecated. Use the main ‘Map’ page.
+
