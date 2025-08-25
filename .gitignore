@@ -62,3 +62,6 @@ pytest-report.xml
 htmlcov/
 node_modules/
 .coverage
+
+# MCP runtime artifacts
+.mcp/
