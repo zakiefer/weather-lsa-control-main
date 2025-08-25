@@ -1,0 +1,52 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+      python -m pip install --upgrade pip
+      if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+      # Safety net to ensure testing deps exist even if not listed
+      python - <<'PY'
+      import importlib.util, subprocess, sys
+      needed = ["pytest", "pytest_cov", "coverage"]
+      missing = [m for m in needed if importlib.util.find_spec(m) is None]
+      if missing:
+        print("Installing missing test deps:", ", ".join(missing))
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+      PY
+      - name: Run tests
+        run: |
+          . .venv/bin/activate
+          bash scripts/run_pytest.sh
+      - name: Enforce coverage >= 60%
+        run: |
+          python - <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse('coverage.xml').getroot()
+          rate = float(root.attrib.get('line-rate', '0'))
+          print(f"Coverage line-rate: {rate*100:.2f}%")
+          sys.exit(0 if rate >= 0.60 else 1)
+          PY
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            coverage.xml
+            pytest-report.xml
+            htmlcov/**

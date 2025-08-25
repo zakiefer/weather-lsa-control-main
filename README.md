@@ -155,26 +155,19 @@ Example deep-link
 		- Logging: --json-logs, and --log-level for verbosity control
 		- Preflight: --doctor-live for live-run readiness checks
 		- Notifications: --notify-test to send a one-off test email
-		- Safety: --lsa-only to enforce Local Services-only mutations
-		- Audit: --status, --export-audit, --days, --format {jsonl,csv}
-		- Region mappings: --map-region AREA_FIPS CAMPAIGN_ID, --map-customer, --unmap-region, --list-regions, --use-region-mappings, --no-region-mappings
-		- Queue: --drain-queue, --queue-status
 		- Scheduler: --scheduler (periodic jobs)
 		- CAP browsing: --caps, --caps-limit N (list latest N CAP alerts)
-		- Rules tooling: --rules-dry-run, --rules-file PATH, --rules-dry-run-limit N
-
-	### Doctor-live details
-	- Validates IDs and developer token; warns if DRY_RUN is enabled.
-	- SMTP probe: connects (STARTTLS if available) and attempts login when credentials are set.
 	- Ads OAuth token: loads token.json if present and refreshes if expired (non-interactive; does not open a browser).
 	- DB probe: ensures schema and performs a test write to a temporary _doctor table.
-	- Clock skew check: compares system time to an external HTTP Date header and warns if skew > 120 seconds.
-	Notes: Missing SMTP or token.json are reported as warnings, not blockers. Use python -m src once to create secrets/token.json.
+	- Figma MCP (HTTP) tool ID compatibility:
+		- figma.ping → figma_ping
+		- figma.auth → figma_auth
+		- figma.me → figma_me
+		- figma.file.get → figma_file_get
+		- figma.file.nodes → figma_file_nodes
 
-	## Configuration
-	- Env vars support both long and short aliases (see .env.example).
-	- Secrets (client_secret.json, token.json) live under secrets/.
-	- Logs and storm state live under logs/.
+	- Clock skew check: compares system time to an external HTTP Date header and warns if skew > 120 seconds.
+
 	- Notifications (email) can be enabled via .env (see Notification section below).
 
 	### Profiles and typed settings
@@ -186,17 +179,11 @@ Example deep-link
 	- The app can store sensitive values in the OS keychain (via keyring). On startup, it attempts to migrate:
 		- Google Ads developer token (developer_token)
 		- SMTP password (smtp_password)
-		- Google OAuth token (google_oauth_token, contents of secrets/token.json)
 	- Environment overrides are supported with SECRET_* variables (e.g., SECRET_DEVELOPER_TOKEN, SECRET_SMTP_PASSWORD).
-	- Logs and traces mask tokens and passwords automatically.
 
-	## Contributing & conventions
 	- See CONTRIBUTING.md for naming conventions (enforced by ruff’s pep8-naming).
-	- See docs/LOGGING.md for logging and error style guidance.
 
 	### Pre-commit hooks (optional)
-	- Install hooks: `make pre-commit-install`
-	- Run on all files: `make pre-commit-run`
 
 	## Tests
 	- Install dev deps: pip install -r requirements-dev.txt
@@ -207,68 +194,41 @@ Example deep-link
 
 	### CI
 	- GitHub Actions workflow runs tests on pushes/PRs to main/master (.github/workflows/ci.yml).
-
-	#### CI/CD pipeline details
-	- Lint: ruff (config in pyproject.toml)
 	- Type-check: mypy (config in pyproject.toml)
 	- Unit tests: pytest
 	- Doctor-live: pipeline fails if doctor-live reports FAIL
 	- Docker build: always builds image
 	- Push: pushes image to GHCR on main
 	- Deploy: optionally patches the weather-lsa Deployment in Kubernetes and waits for rollout
-
-	Optional canary probe in CI:
 	- If repository secrets are configured (GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_OAUTH, and IDs), the pipeline will run a non-mutating probe against the canary Ads API version and log the result. It is marked continue-on-error so PRs are not blocked by credential issues.
 
-	Canary/version management (CLI):
-	- Configure GOOGLE_ADS_API_VERSION (default) and optional GOOGLE_ADS_API_VERSION_CANARY.
 	- Probe canary: python -m src --doctor-ads-canary
 	- Promote canary: python -m src --promote-canary
-	- Demote/clear override: python -m src --demote-canary
-	- Promote if healthy (probe then persist): python -m src --promote-if-healthy
 	- Show effective/default/canary: python -m src --show-version
 
-	Makefile shortcuts:
-	- make canary-probe / make promote-if-healthy / make show-version
-	- make export-audit DAYS=14 FMT=csv
 	- make scheduler-safe (runs --scheduler with DRY_RUN + validate-only)
 
-	Secrets / variables:
-	- K8S_CONFIG (secret): kubeconfig content to enable deploy job
-	- Optional DOCKER_IMAGE (secret): custom image tag (defaults to ghcr.io/<repo>:<sha>)
 
 	### Release
 	- Version is managed in pyproject.toml.
 	- Changelog is in CHANGELOG.md.
 	- Optional helper: make release creates a git tag for the current version and prints recent changelog headings.
-
-	### Makefile (optional)
-	Common helpers:
-
-	- make venv && make install – set up env and install runtime deps
 	- make install-dev – install dev/test deps
 	- make test – run unit tests
-	- make run / make dry-run – run app
 	- make init / make doctor / make status – setup and checks
 	- make drain / make queue-status – worker operations
 	- make docker-build – build the slim container
 	- make docker-run – run the container with mapped health/metrics ports and mounted secrets/data
-
 	## Notifications
 	- Enable by setting ENABLE_NOTIFICATIONS=true in .env.
-	- Email (default recipient is EMAIL_TO): configure SMTP settings (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, EMAIL_FROM).
 	- SMS support has been removed. Only email is supported.
-	- Quick validation without weather/ads: python -m src --notify-test
 
-	## Metrics
 	- Optional Prometheus metrics exporter. Set METRICS_PORT in .env (e.g., METRICS_PORT=9108).
 	- When enabled, the app exposes /metrics on the configured port with counters and latency histograms.
 
 	Example Prometheus scrape config (optional):
 
 	```
-	scrape_configs:
-		- job_name: 'weather-lsa'
 			static_configs:
 				- targets: ['localhost:9108']
 	```
@@ -280,9 +240,6 @@ Example deep-link
 		- /readyz – readiness with JSON payload:
 			- ready (bool), db_ok (bool), creds_ok (bool)
 			- breaker_open (bool), breaker_until (timestamp or null)
-			- queue (counts: queued, running, done, error)
-			- smtp (object: enabled, ok, login?, error?)
-			- clock (object: skew_seconds, server_time, source)
 			- time (ISO timestamp)
 
 	## Docker deployment
@@ -364,3 +321,12 @@ Example deep-link
 		- Authenticate once by running python -m src to generate secrets/token.json.
 	- IDs must be digits (no dashes):
 		- Set GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_CAMPAIGN_ID, and optionally GOOGLE_ADS_LOGIN_CUSTOMER_ID without dashes.
+
+## Testing & Tools
+
+[![tests](https://github.com/ORG/REPO/actions/workflows/tests.yml/badge.svg)](../../actions/workflows/tests.yml)
+
+See docs/TESTING_HELPERS.md for:
+- Playwright codegen (record flows)
+- Pytest coverage+retry wrapper
+- Memory summarize helper (JSONL)

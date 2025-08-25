@@ -1,3 +1,5 @@
+# Local environment overrides (do not commit secrets)
+.env.local
 tmp/
 *.pyc
 __pycache__/
@@ -38,6 +40,7 @@ data/
 src/client_secret*.json
 client_secret*.json
 secrets/
+.secrets/
 
 # E2E artifacts
 tests/e2e/.auth/
@@ -52,3 +55,8 @@ docs/img/e2e/
 tests/e2e/__screenshots__/
 playwright-report/
 test-results/
+
+# Test/coverage artifacts
+coverage.xml
+pytest-report.xml
+htmlcov/
