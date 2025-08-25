@@ -324,7 +324,7 @@ Example deep-link
 
 ## Testing & Tools
 
-[![tests](https://github.com/ORG/REPO/actions/workflows/tests.yml/badge.svg)](../../actions/workflows/tests.yml)
+[![tests](https://github.com/ORG/REPO/actions/workflows/tests.yml/badge.svg)](https://github.com/ORG/REPO/actions/workflows/tests.yml)
 
 See docs/TESTING_HELPERS.md for:
 - Playwright codegen (record flows)
