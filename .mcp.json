@@ -1,59 +1,294 @@
 {
   "servers": {
-    "fs": { "type": "builtin" },
-    "git": { "type": "builtin" },
-    "issues": { "type": "builtin" },
-    "tasks": { "type": "builtin" },
-
-    "pytest": { "command": "pytest" },
-    "coverage": { "command": "coverage run -m pytest" },
-
-    "docker": { "command": "docker" },
-    "kubernetes": { "command": "kubectl" },
-    "ci": { "command": "gh workflow run" },
-
-    "sql": { "command": "sqlite3" },
-    "http": { "type": "builtin" },
-    "fetch": { "type": "builtin" },
-    "secrets": { "type": "builtin" },
-
-    "browser": { "type": "remote", "name": "Playwright MCP" },
-    "a11y": { "type": "remote", "name": "axe-core A11y MCP" },
-
-    "mapbox": { "type": "remote", "name": "Mapbox MCP", "env": ["MAPBOX_ACCESS_TOKEN"] },
-    "googlemaps": { "type": "remote", "name": "Google Maps MCP", "env": ["GOOGLE_MAPS_API_KEY"] },
-
-    "google-maps": { "type": "remote", "repo": "octahaidra/google-maps-MCP", "env": ["GOOGLE_MAPS_API_KEY"] },
-    "travel-planner": { "type": "remote", "name": "Travel Planner MCP", "env": ["GOOGLE_MAPS_API_KEY"] },
-    "map-traveler": { "type": "remote", "name": "Map Traveler MCP" },
-    "naver-map": { "type": "remote", "name": "Naver Map Direction MCP", "env": ["NAVER_MAP_GEO_API_URL", "CLIENT_ID", "CLIENT_SECRET"] },
-    "playwright": { "type": "builtin" },
-    "puppeteer": { "type": "builtin" },
-    "mcp-browser": { "type": "remote", "name": "Puppeteer-based Browser MCP" },
-    "mcp-web": { "type": "remote", "name": "Playwright-based Web Browser Server" },
-    "browser-use": { "type": "remote", "name": "Vision-capable Browser Automation (Persistent)" },
-    "ai-vision-debug": { "type": "remote", "name": "AI Vision Debug MCP Server" },
-  "screenshot": { "type": "remote", "name": "Screenshot MCP Server" },
-
+    "fs": {
+      "type": "builtin"
+    },
+    "git": {
+      "type": "builtin"
+    },
+    "issues": {
+      "type": "builtin"
+    },
+    "tasks": {
+      "type": "builtin"
+    },
+    "pytest": {
+      "command": "pytest"
+    },
+    "coverage": {
+      "command": "coverage run -m pytest"
+    },
+    "docker": {
+      "command": "docker"
+    },
+    "kubernetes": {
+      "command": "kubectl"
+    },
+    "ci": {
+      "command": "gh workflow run"
+    },
+    "sql": {
+      "command": "sqlite3"
+    },
+    "http": {
+      "type": "builtin"
+    },
+    "fetch": {
+      "type": "builtin"
+    },
+    "secrets": {
+      "type": "builtin"
+    },
+    "browser": {
+      "type": "remote",
+      "name": "Playwright MCP"
+    },
+    "a11y": {
+      "type": "remote",
+      "name": "axe-core A11y MCP"
+    },
+    "mapbox": {
+      "type": "remote",
+      "name": "Mapbox MCP",
+      "env": [
+        "MAPBOX_ACCESS_TOKEN"
+      ]
+    },
+    "googlemaps": {
+      "type": "remote",
+      "name": "Google Maps MCP",
+      "env": [
+        "GOOGLE_MAPS_API_KEY"
+      ]
+    },
+    "google-maps": {
+      "type": "remote",
+      "repo": "octahaidra/google-maps-MCP",
+      "env": [
+        "GOOGLE_MAPS_API_KEY"
+      ]
+    },
+    "travel-planner": {
+      "type": "remote",
+      "name": "Travel Planner MCP",
+      "env": [
+        "GOOGLE_MAPS_API_KEY"
+      ]
+    },
+    "map-traveler": {
+      "type": "remote",
+      "name": "Map Traveler MCP"
+    },
+    "naver-map": {
+      "type": "remote",
+      "name": "Naver Map Direction MCP",
+      "env": [
+        "NAVER_MAP_GEO_API_URL",
+        "CLIENT_ID",
+        "CLIENT_SECRET"
+      ]
+    },
+    "playwright": {
+      "type": "builtin"
+    },
+    "puppeteer": {
+      "type": "builtin"
+    },
+    "mcp-browser": {
+      "type": "remote",
+      "name": "Puppeteer-based Browser MCP"
+    },
+    "mcp-web": {
+      "type": "remote",
+      "name": "Playwright-based Web Browser Server"
+    },
+    "browser-use": {
+      "type": "remote",
+      "name": "Vision-capable Browser Automation (Persistent)"
+    },
+    "ai-vision-debug": {
+      "type": "remote",
+      "name": "AI Vision Debug MCP Server"
+    },
+    "screenshot": {
+      "type": "remote",
+      "name": "Screenshot MCP Server"
+    },
+    "openai": {
+      "type": "remote",
+      "name": "OpenAI MCP",
+      "env": {
+        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+        "OPENAI_BASE_URL": "${env:OPENAI_BASE_URL}"
+      },
+      "models": {
+        "default": "gpt-4o",
+        "allow": [
+          "gpt-4o"
+        ],
+        "defaultModel": "gpt-4o"
+      }
+    },
+    "openrouter": {
+      "type": "remote",
+      "name": "OpenRouter MCP",
+      "env": [
+        "OPENROUTER_API_KEY"
+      ],
+      "models": {
+        "default": "openai/gpt-4o",
+        "allow": [
+          "anthropic/claude-3-5-sonnet-latest",
+          "google/gemini-1.5-pro-latest",
+          "meta-llama/llama-3.1-405b-instruct",
+          "openai/gpt-4o"
+        ],
+        "defaultModel": "openai/gpt-4o"
+      }
+    },
+    "llm-router": {
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "cwd": "${workspaceFolder}/mcp/llm-router",
+      "env": {
+        "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}"
+      },
+      "models": {
+        "default": "openai/gpt-4o",
+        "allow": [
+          "openai/gpt-4o",
+          "anthropic/claude-3-5-sonnet-latest",
+          "google/gemini-1.5-pro-latest",
+          "meta-llama/llama-3.1-405b-instruct"
+        ],
+        "aliases": {
+          "best_openai": [
+            "openai/gpt-4o"
+          ],
+          "best_anthropic": [
+            "anthropic/claude-3-5-sonnet-latest"
+          ],
+          "best_google": [
+            "google/gemini-1.5-pro-latest"
+          ],
+          "best_meta": [
+            "meta-llama/llama-3.1-405b-instruct"
+          ],
+          "best_code": [
+            "openai/gpt-4o"
+          ],
+          "best_long": [
+            "google/gemini-1.5-pro-latest"
+          ],
+          "best_vision": [
+            "openai/gpt-4o"
+          ],
+          "gpt-5-preview": [
+            "openai/gpt-4o"
+          ],
+          "best_ensemble": [
+            "openai/gpt-4o",
+            "anthropic/claude-3-5-sonnet-latest",
+            "google/gemini-1.5-pro-latest"
+          ]
+        },
+        "routing": {
+          "chat": "best_ensemble",
+          "planning": "best_ensemble",
+          "refactor": "best_ensemble",
+          "codegen": "best_code",
+          "long_context": "best_long",
+          "vision": "best_vision",
+          "fallback": "best_openai"
+        }
+      }
+    },
     "screen-capture": {
       "type": "commands",
       "commands": {
-        "capture_window": { "run": ["bash", "scripts/vision/capture_window.sh", "<app>", "<out>"] },
-        "capture_screen": { "run": ["bash", "scripts/vision/capture_screen.sh", "<out>"] },
-        "ocr":            { "run": ["bash", "scripts/vision/ocr.sh", "<img>"] }
+        "capture_window": {
+          "run": [
+            "bash",
+            "scripts/vision/capture_window.sh",
+            "<app>",
+            "<out>"
+          ]
+        },
+        "capture_screen": {
+          "run": [
+            "bash",
+            "scripts/vision/capture_screen.sh",
+            "<out>"
+          ]
+        },
+        "ocr": {
+          "run": [
+            "bash",
+            "scripts/vision/ocr.sh",
+            "<img>"
+          ]
+        }
       }
     },
-
     "memory": {
       "type": "commands",
       "commands": {
-        "log_jsonl": { "run": ["bash", "scripts/memory/log_jsonl.sh", "<json>"] },
-        "log_quick": { "run": ["python3", "-c",
-          "import json,sys; d={'goal':sys.argv[1],'step':sys.argv[2],'cmds':sys.argv[3],'files':sys.argv[4],'result':sys.argv[5],'followups':sys.argv[6]}; print(json.dumps(d))",
-          "<goal>","<step>","<cmds>","<files>","<result>","<followups>"] },
-        "todo_add":  { "run": ["bash", "scripts/memory/todo.sh", "add", "<text>"] },
-        "todo_done": { "run": ["bash", "scripts/memory/todo.sh", "done", "<id>"] },
-        "todo_list": { "run": ["bash", "scripts/memory/todo.sh", "list"] }
+        "log_jsonl": {
+          "run": [
+            "bash",
+            "scripts/memory/log_jsonl.sh",
+            "<json>"
+          ]
+        },
+        "log_quick": {
+          "run": [
+            "python3",
+            "-c",
+            "import json,sys; d={'goal':sys.argv[1],'step':sys.argv[2],'cmds':sys.argv[3],'files':sys.argv[4],'result':sys.argv[5],'followups':sys.argv[6]}; print(json.dumps(d))",
+            "<goal>",
+            "<step>",
+            "<cmds>",
+            "<files>",
+            "<result>",
+            "<followups>"
+          ]
+        },
+        "todo_add": {
+          "run": [
+            "bash",
+            "scripts/memory/todo.sh",
+            "add",
+            "<text>"
+          ]
+        },
+        "todo_done": {
+          "run": [
+            "bash",
+            "scripts/memory/todo.sh",
+            "done",
+            "<id>"
+          ]
+        },
+        "todo_list": {
+          "run": [
+            "bash",
+            "scripts/memory/todo.sh",
+            "list"
+          ]
+        }
+      }
+    },
+    "progress-demo": {
+      "command": "python3 tools/mcp_progress.py"
+    }
+    ,
+    "clarity": {
+      "command": "${env:CLARITY_MCP_CMD}",
+      "env": {
+        "CLARITY_PROJECT_ID": "${env:CLARITY_PROJECT_ID}",
+        "CLARITY_API_TOKEN": "${env:CLARITY_API_TOKEN}"
       }
     }
   }

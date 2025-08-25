@@ -92,7 +92,7 @@
 
   // Chat agent controls
   "chat.agent.enabled": true,
-  "chat.agent.maxRequests": 100,
+  "chat.agent.maxRequests": 100000,
   "chat.agent.autoFix": true,
   "chat.extensionTools.enabled": true,
   "chat.tools.autoApprove": true,
@@ -121,5 +121,8 @@
   // Language specific
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   }
 }

@@ -11,5 +11,11 @@ pip-audit==2.7.3
 bandit==1.7.9
 detect-secrets==1.5.0
 types-cachetools
-playwright==1.47.0
-pytest-playwright==0.5.1
+# NOTE: Playwright 1.47 pins greenlet==3.0.3, which fails to build on Python 3.13.
+# Until we bump to a Playwright version that supports Python 3.13 with a newer greenlet,
+# only install these on Python < 3.13 to keep local dev envs unblocked.
+playwright==1.47.0; python_version < "3.13"
+pytest-playwright==0.5.1; python_version < "3.13"
+# Use MCP SDK with new server.tool API (>=1.13)
+mcp>=1.13.1
+anyio>=4.4.0

@@ -6,6 +6,8 @@ from pathlib import Path
 import streamlit as st
 from streamlit.runtime.caching import cache_data
 
+from ui.testids import testid
+
 # Ensure repo root on sys.path so `ui` and `src` can be imported
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -36,8 +38,11 @@ def load_history(days: int = 7, search: str | None = None):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        since = (datetime.utcnow() - timedelta(days=days)).isoformat()
-        q = "SELECT id, source, issued_at, areas, severity, hash, cap_id, effective_at FROM alerts WHERE datetime(issued_at) >= datetime(?) ORDER BY issued_at DESC"
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        q = (
+            "SELECT id, source, issued_at, areas, severity, hash, cap_id, effective_at "
+            "FROM alerts WHERE datetime(issued_at) >= datetime(?) ORDER BY issued_at DESC"
+        )
         res = cur.execute(q, (since,))
         rows = res.fetchall() if res is not None else []
         items = []
@@ -81,11 +86,13 @@ if "hist_refresh_sec" not in st.session_state:
         _rv = 120
     st.session_state["hist_refresh_sec"] = max(30, min(600, _rv))
 
-days = st.slider("Days", min_value=1, max_value=30, value=7)
-search = st.text_input("Search", "")
-auto_refresh = st.checkbox("Auto-refresh", key="hist_auto_refresh", help="Refresh history table periodically")
+days = st.slider(testid("hist_days") + "Days", min_value=1, max_value=30, value=7)
+search = st.text_input(testid("hist_search") + "Search", "")
+auto_refresh = st.checkbox(
+    testid("hist_auto_refresh") + "Auto-refresh", key="hist_auto_refresh", help="Refresh history table periodically"
+)
 refresh_sec = st.slider(
-    "Refresh interval (sec)",
+    testid("hist_refresh_sec") + "Refresh interval (sec)",
     min_value=30,
     max_value=600,
     value=st.session_state.get("hist_refresh_sec", 120),

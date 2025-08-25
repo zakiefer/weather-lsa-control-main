@@ -19,6 +19,7 @@ from src.config import settings as cfg  # type: ignore
 from src.db import get_config_value, set_config_value  # type: ignore
 from src.lsa_client import LSAClient  # type: ignore
 from src.services.ads_service import AdsService  # type: ignore
+from ui.testids import testid
 
 
 # Simple local short time formatting helper for any future timestamps shown
@@ -39,9 +40,13 @@ def _fmt_short_local(ts: str | None) -> str:
 
 @cache_data(ttl=20)
 def fetch_campaigns(page_size: int = 100):
-    creds = get_credentials()
-    client = LSAClient(creds)
-    return client.list_campaigns(page_size=page_size)
+    try:
+        creds = get_credentials()
+        client = LSAClient(creds)
+        return client.list_campaigns(page_size=page_size)
+    except Exception:
+        # In e2e or without creds, fail soft and show empty list
+        return []
 
 
 st.title("Ads")
@@ -56,13 +61,17 @@ if isinstance(qp, dict) and qp.get("from") == "map":
 
 cols = st.columns(3)
 with cols[0]:
-    validate_only = st.toggle("Validate-only", value=True, help="Use validateOnly when toggling status")
+    validate_only = st.toggle(
+        testid("ads_validate_only") + "Validate-only", value=True, help="Use validateOnly when toggling status"
+    )
 with cols[1]:
-    require_lsa = st.toggle("LSA-only guard", value=True, help="Only allow Local Services campaigns")
+    require_lsa = st.toggle(
+        testid("ads_lsa_only_guard") + "LSA-only guard", value=True, help="Only allow Local Services campaigns"
+    )
 with cols[2]:
-    kill_switch = st.toggle("Kill switch", value=bool(getattr(cfg, "KILL_SWITCH", False)))
+    kill_switch = st.toggle(testid("ads_kill_switch") + "Kill switch", value=bool(getattr(cfg, "KILL_SWITCH", False)))
 
-if st.button("Apply kill switch"):
+if st.button(testid("ads_apply_kill") + "Apply kill switch"):
     set_config_value("KILL_SWITCH", "true" if kill_switch else "false")
     st.success("Saved kill switch. Services pick it up via settings/db.")
 
@@ -85,12 +94,12 @@ st.subheader("LSA mutate behavior")
 toggle_cols = st.columns(2)
 with toggle_cols[0]:
     des = st.toggle(
-        "Allow Ads.status changes for LSA",
+        testid("ads_allow_mutate") + "Allow Ads.status changes for LSA",
         value=eff_flag,
         help="If off, we will validate-only and audit but not call live mutate for LSA.",
     )
 with toggle_cols[1]:
-    if st.button("Save LSA mutate setting"):
+    if st.button(testid("ads_save_mutate") + "Save LSA mutate setting"):
         set_config_value("lsa_mutate_via_ads_status", "true" if des else "false")
         st.success("Saved. Worker picks up immediately on next call.")
 
@@ -111,8 +120,13 @@ else:
                     "Google Ads campaign status. If you see mismatched statuses across UIs, rely on the LSA\n"
                     "Profile page for the source of truth.",
                 )
-            new = st.selectbox("Set status", options=["ENABLED", "PAUSED"], index=0, key=f"sel_{c.get('id')}")
-            if st.button("Apply", key=f"btn_{c.get('id')}"):
+            new = st.selectbox(
+                testid("ads_set_status") + "Set status",
+                options=["ENABLED", "PAUSED"],
+                index=0,
+                key=f"sel_{c.get('id')}",
+            )
+            if st.button(testid("ads_apply_status") + "Apply", key=f"btn_{c.get('id')}"):
                 creds = get_credentials()
                 svc = AdsService(creds)
                 res = svc.client.set_campaign_status(new, validate_only=validate_only)

@@ -1,0 +1,39 @@
+{
+  "name": "mcp-progress",
+  "displayName": "MCP Progress",
+  "description": "Show MCP progress notifications in a cancellable notification and the status bar.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mcp-progress.connect",
+        "title": "MCP: Connect to Progress Demo"
+      },
+      {
+        "command": "mcp-progress.startLongTask",
+        "title": "MCP: Start Long Task (Progress Demo)"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0",
+    "vsce": "^2.15.0"
+  }
+}

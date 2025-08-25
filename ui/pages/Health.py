@@ -43,5 +43,7 @@ with st.expander("Logs tail (weather_monitor.log)"):
     except Exception as e:
         st.info(str(e))
 
-if st.button("Refresh now"):
+from ui.testids import testid
+
+if st.button(testid("health_refresh") + "Refresh now"):
     st.experimental_rerun()

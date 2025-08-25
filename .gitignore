@@ -60,3 +60,4 @@ test-results/
 coverage.xml
 pytest-report.xml
 htmlcov/
+node_modules/

@@ -3,6 +3,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from ui.testids import testid
+
 st.set_page_config(page_title="Profile", page_icon="👤", layout="wide")
 
 # Ensure repo root importable
@@ -28,8 +30,10 @@ user = st.session_state.get("user") or {}
 uid = int(user.get("id") or 0)
 
 st.subheader("Account")
-email = st.text_input("Email", value=user.get("email") or "")
-new_pw = st.text_input("New password", value="", type="password", help="Leave blank to keep current password")
+email = st.text_input(testid("prof_email") + "Email", value=user.get("email") or "")
+new_pw = st.text_input(
+    testid("prof_new_pw") + "New password", value="", type="password", help="Leave blank to keep current password"
+)
 
 
 def _save_profile(uid: int, email: str | None, new_password: str | None) -> bool:
@@ -51,7 +55,7 @@ def _save_profile(uid: int, email: str | None, new_password: str | None) -> bool
         return False
 
 
-if st.button("Save changes"):
+if st.button(testid("prof_save") + "Save changes"):
     if _save_profile(uid, email or None, new_pw or None):
         # Refresh session with updated email
         st.session_state["user"]["email"] = email
@@ -60,7 +64,7 @@ if st.button("Save changes"):
         st.error("Failed to update.")
 
 st.subheader("Password reset via email")
-if st.button("Send password reset link"):
+if st.button(testid("prof_send_reset") + "Send password reset link"):
     token = begin_password_reset(user.get("username", ""))
     if token:
         # If email is configured, send link

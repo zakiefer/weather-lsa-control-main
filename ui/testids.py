@@ -17,6 +17,7 @@ PREFIX = "[tid]"
 
 
 def testid(name: str) -> str:
-    if os.getenv("E2E_TEST_IDS", "0").lower() in {"1", "true", "yes", "on"}:
+    # Enable test IDs when explicitly requested or when running under pytest
+    if os.getenv("E2E_TEST_IDS", "0").lower() in {"1", "true", "yes", "on"} or os.getenv("PYTEST_CURRENT_TEST"):
         return f"{PREFIX}{name}: "
     return ""

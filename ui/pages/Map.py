@@ -96,16 +96,8 @@ from ui._bootstrap import *  # noqa: F401,F403
 
 require_auth()
 
-# Proactive parent readiness marker so tests can gate on it even before iframe scripts run
-try:
-    st.markdown(
-        """
-        <script>(function(){try{ if(document && document.body){ document.body.setAttribute('data-map-ready-parent','1'); } }catch(e){}})();</script>
-        """,
-        unsafe_allow_html=True,
-    )
-except Exception:
-    pass
+# Proactive parent readiness marker removed to avoid raw JS leakage in some Streamlit builds.
+# The deterministic helper iframe below sets readiness markers reliably for E2E.
 
 # Local helpers/state
 SB = st.sidebar
@@ -120,49 +112,7 @@ suppress_qp_updates: bool = False
 
 # Parent-level enforcement handled by the robust st_html provisioner below to avoid duplicate injectors
 
-# E2E-only fallback: if the helper iframe isn't present quickly, create one via srcdoc so tests have stable selectors
-try:
-    if E2E_MODE:
-        st.markdown(
-            r"""
-            <script>(function(){try{
-                if(window.__map_helper_iframe_fallback_init) return; window.__map_helper_iframe_fallback_init = true;
-                var checks = 0;
-                function ensureHelper(){
-                    try{
-                        // If a deterministic helper iframe already exists, stop.
-                        if (document.querySelector('iframe#__map_e2e_iframe')){ return true; }
-                        // If a component iframe renamed itself already, stop.
-                        var named = Array.prototype.some.call(document.querySelectorAll('iframe'), function(f){ return (f && (f.id==='__map_e2e_iframe' || f.name==='__map_e2e_iframe')); });
-                        if (named){ return true; }
-                        // After a short grace period, inject a minimal srcdoc-based helper iframe
-                        if (checks < 8){ return false; } // ~8*120ms ~ 1s grace for normal mount
-                        var html = "<!doctype html><html><head><meta charset='utf-8'/><style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:6px;}#rv_timeline_wrap{position:relative;background:rgba(255,255,255,0.95);padding:6px 10px;border:1px solid #ccc;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.15);}#rv_slider{width:160px;}#op_drawer{display:none;position:relative;margin-top:10px;background:rgba(255,255,255,0.97);padding:8px 10px;border:1px solid #ccc;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.18);}#op_drawer_open{margin-top:8px;}</style></head><body data-map-sentinel='1' data-map-ready='1' data-map-timeline-ready='1' data-map-drawer-ready='1'><div id='__map_sentinel' style='display:none'></div><div id='rv_timeline_wrap' aria-label='Radar timeline'><button id='rv_play' type='button'>Play</button><button id='rv_pause' type='button'>Pause</button><button id='rv_prev' type='button'>◀</button><button id='rv_next' type='button'>▶</button><button id='rv_now' type='button'>Now</button><button id='rv_oldest' type='button'>Oldest</button><input id='rv_slider' type='range' min='0' max='12' step='1' value='0'/><span id='rv_label'>~0m</span></div><button id='op_drawer_open' type='button'>Opacity</button><div id='op_drawer'><div style='display:flex;align-items:center;justify-content:space-between;'><div style='font-weight:700;'>Layer Opacity</div><button id='op_drawer_close' title='Hide' style='padding:0 6px; font-size:14px;'>×</button></div><div id='op_drawer_content' style='margin-top:6px;'><div style='margin:6px 0;'><span>Radar </span><input id='op_rv' type='range' min='10' max='100' step='5' style='width:140px; margin-left:8px;'/><span id='op_rv_val' style='margin-left:6px;'></span></div><div style='margin:6px 0;'><span>Satellite </span><input id='op_sat' type='range' min='10' max='100' step='5' style='width:140px; margin-left:8px;'/><span id='op_sat_val' style='margin-left:6px;'></span></div><div style='margin:6px 0;'><span>GLM </span><input id='op_glm' type='range' min='10' max='100' step='5' style='width:140px; margin-left:8px;'/><span id='op_glm_val' style='margin-left:6px;'></span></div></div></div><script>(function(){try{var slider=document.getElementById('rv_slider');var label=document.getElementById('rv_label');function setLabel(){try{var v=parseInt(slider.value)||0;label.textContent='~'+(v*10)+'m';}catch(e){}}function setValue(v){try{var max=parseInt(slider.max)||12;var nv=Math.max(0,Math.min(max,parseInt(v)||0));slider.value=String(nv);try{slider.setAttribute('value',String(nv));slider.dispatchEvent(new Event('input',{bubbles:true}));slider.dispatchEvent(new Event('change',{bubbles:true}));}catch(_e){}setLabel();}catch(e){}}setLabel();var _t=null;var bPlay=document.getElementById('rv_play');if(bPlay){bPlay.addEventListener('click',function(){try{if(_t)clearInterval(_t);_t=setInterval(function(){var v=parseInt(slider.value)||0;var m=parseInt(slider.max)||12;setValue(v>=m?0:v+1);},200);}catch(e){}})}var bPause=document.getElementById('rv_pause');if(bPause){bPause.addEventListener('click',function(){try{if(_t){clearInterval(_t);_t=null;}}catch(e){}})}var bPrev=document.getElementById('rv_prev');if(bPrev){bPrev.addEventListener('click',function(){setValue((parseInt(slider.value)||0)-1);});}var bNext=document.getElementById('rv_next');if(bNext){bNext.addEventListener('click',function(){setValue((parseInt(slider.value)||0)+1);});}var bNow=document.getElementById('rv_now');if(bNow){bNow.addEventListener('click',function(){setValue(0);});}var bOld=document.getElementById('rv_oldest');if(bOld){bOld.addEventListener('click',function(){setValue(parseInt(slider.max)||12);});}function hydrate(id,key,def){try{var el=document.getElementById(id);var v=localStorage.getItem(key);var n=parseInt(v);if(isNaN(n)){n=def;}n=Math.max(10,Math.min(100,n));el.value=String(n);var lbl=document.getElementById(id+'_val');if(lbl){lbl.textContent=String(n)+'%';}el.addEventListener('input',function(){var vv=parseInt(this.value)||n;vv=Math.max(10,Math.min(100,vv));if(lbl){lbl.textContent=String(vv)+'%';}try{localStorage.setItem(key,String(vv));}catch(e){}});}catch(e){}}hydrate('op_rv','rv_opacity',60);hydrate('op_sat','sat_opacity',60);hydrate('op_glm','glm_opacity',60);try{document.body.setAttribute('data-map-ready','1');document.body.setAttribute('data-map-timeline-ready','1');document.body.setAttribute('data-map-drawer-ready','1');window.__map_timeline_ready=true;}catch(e){}try{if(window.parent&&window.parent.document&&window.parent.document.body){window.parent.document.body.setAttribute('data-map-ready-parent','1');}}catch(e){} }catch(e){}})();<\/script></body></html>";
-                        var ifr = document.createElement('iframe');
-                        ifr.id = '__map_e2e_iframe';
-                        ifr.name = '__map_e2e_iframe';
-                        // Keep visible for interaction; pin in top-left corner
-                        ifr.style.cssText = 'position: fixed; top: 8px; left: 8px; z-index: 2147483647; width: 520px; height: 210px; border: 0; background: transparent;';
-                        // Allow scripts + same-origin so localStorage works for the frame
-                        try{ ifr.setAttribute('sandbox', 'allow-scripts allow-same-origin'); }catch(e){}
-                        try{ ifr.setAttribute('allow', ''); }catch(e){}
-                        ifr.srcdoc = html;
-                        document.body.appendChild(ifr);
-                        // Mark parent readiness
-                        try{ document.body.setAttribute('data-map-ready-parent','1'); }catch(e){}
-                        return true;
-                    }catch(e){ return false; }
-                }
-                var tries = 0; var iv = setInterval(function(){
-                    try{ checks++; tries++; if(ensureHelper()){ clearInterval(iv); } if(tries>100){ clearInterval(iv); } }catch(e){ try{clearInterval(iv);}catch(_e){} }
-                }, 120);
-            }catch(e){}}
-            )();</script>
-            """,
-            unsafe_allow_html=True,
-        )
-except Exception:
-    pass
+# E2E srcdoc fallback removed; the component iframe below provides stable selectors.
 
 
 def _qp_get(name: str):
@@ -474,7 +424,9 @@ try:
                                             f.style.height = '210px';
                                             f.style.border = '0';
                                             f.style.background = 'transparent';
-                                            f.style.zIndex = '2147483647';
+                                            // AFTER
+                                            f.style.zIndex = '999';
+
                                         }catch(e){}
                                         try{ removeStAppContainer(); }catch(e){}
                                     }

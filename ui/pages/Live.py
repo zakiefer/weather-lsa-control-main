@@ -36,6 +36,8 @@ def fetch_live_features(states: list[str]):
     return feats
 
 
+from ui.testids import testid
+
 st.title("Live")
 
 # Read query params to prefill filter, states, and refresh controls (from deep-links)
@@ -57,7 +59,12 @@ if isinstance(qp, dict):
 allowed_states = ["IN", "IL", "KY"]
 if "ls_states" not in st.session_state:
     st.session_state["ls_states"] = [s for s in (prefill_states or allowed_states) if s in allowed_states]
-states = st.multiselect("States", options=allowed_states, key="ls_states", help="Areas to query from NWS active alerts")
+states = st.multiselect(
+    testid("live_states") + "States",
+    options=allowed_states,
+    key="ls_states",
+    help="Areas to query from NWS active alerts",
+)
 if "ls_filter" not in st.session_state:
     st.session_state["ls_filter"] = prefill or ""
 features_for_opts = fetch_live_features(st.session_state["ls_states"]) if st.session_state.get("ls_states") else []
@@ -69,9 +76,13 @@ event_opts = sorted(
         if (f.get("properties") or {}).get("event")
     }
 )
-flt = st.text_input("Filter event contains", key="ls_filter", placeholder="e.g., Tornado Warning")
+flt = st.text_input(
+    testid("live_filter") + "Filter event contains", key="ls_filter", placeholder="e.g., Tornado Warning"
+)
 if event_opts:
-    st.selectbox("Or pick an event", options=["—"] + event_opts, index=0, key="ls_event_pick")
+    st.selectbox(
+        testid("live_event_pick") + "Or pick an event", options=["—"] + event_opts, index=0, key="ls_event_pick"
+    )
     if st.session_state.get("ls_event_pick") and st.session_state.get("ls_event_pick") != "—":
         st.session_state["ls_filter"] = st.session_state.get("ls_event_pick")
 colz = st.columns(2)
@@ -84,8 +95,8 @@ with colz[0]:
             unsafe_allow_html=True,
         )
 with colz[1]:
-    st.button("Zoom Map to data (on Map)")
-if st.button("Refresh"):
+    st.button(testid("live_zoom_map") + "Zoom Map to data (on Map)")
+if st.button(testid("live_refresh") + "Refresh"):
     st.experimental_rerun()
 
 # Auto-refresh controls with session state + deep link defaults
@@ -97,9 +108,9 @@ if "ls_refresh_sec" not in st.session_state:
     except Exception:
         rv = 60
     st.session_state["ls_refresh_sec"] = max(15, min(300, rv))
-auto_refresh = st.checkbox("Auto-refresh", key="ls_auto_refresh")
+auto_refresh = st.checkbox(testid("live_auto_refresh") + "Auto-refresh", key="ls_auto_refresh")
 refresh_sec = st.slider(
-    "Refresh interval (sec)",
+    testid("live_refresh_sec") + "Refresh interval (sec)",
     min_value=15,
     max_value=300,
     value=st.session_state.get("ls_refresh_sec", 60),

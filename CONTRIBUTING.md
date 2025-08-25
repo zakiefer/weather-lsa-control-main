@@ -27,6 +27,7 @@ Keep names simple, descriptive, and consistent. Favor clarity over brevity.
   - Boolean flags as predicates: `is_enabled`, `has_token`, `should_retry`.
 
 ## Additional guidance
+
 - Avoid acronyms unless well-known (e.g., `NWS`, `LSA`), and expand at first use in docs.
 - Keep function sizes small; extract helpers with purposeful names.
 - Consistency beats “perfect” names—follow the existing style in this repo.

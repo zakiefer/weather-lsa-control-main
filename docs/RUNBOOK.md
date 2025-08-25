@@ -3,6 +3,7 @@
 A concise, one-page operations guide for common actions.
 
 ## Kill switch (immediate stop of Ads mutations)
+
 - Temporarily disable all enable/pause actions via the kill switch.
 - Options:
   - CLI (one-off run): set env var when running the process
@@ -13,6 +14,7 @@ A concise, one-page operations guide for common actions.
 - Status check: `python -m src --status` shows breaker/queue; kill switch logs “KILL_SWITCH is active…” when a cycle runs.
 
 ## Clear storm holds
+
 - Clears the last-alert time to immediately consider PAUSE/ENABLE actions (ignores the configured hold window).
 - Command:
   - python -m src --clear-hold
@@ -20,6 +22,7 @@ A concise, one-page operations guide for common actions.
 - Verify: `python -m src --status` prints Last alert (UTC): None and Storm hold: INACTIVE.
 
 ## Re-authenticate Google OAuth (token.json)
+
 - When token is expired or missing, re-run the OAuth flow.
 - Command:
   - python -m src
@@ -27,6 +30,7 @@ A concise, one-page operations guide for common actions.
 - Headless: not supported for the interactive flow; ensure machine has a browser or use a remote port-forward.
 
 ## Rotate secrets
+
 - Developer token (Google Ads):
   - Set SECRET_DEVELOPER_TOKEN as an environment variable (or update your OS keychain entry named developer_token).
   - Optionally update `.env` with GOOGLE_ADS_DEVELOPER_TOKEN for local dev (env vars still win).
@@ -40,6 +44,7 @@ A concise, one-page operations guide for common actions.
   - Re-run `python -m src` to refresh; the app migrates `secrets/token.json` contents into the keychain automatically.
 
 ## Interpreting top error codes/messages
+
 - 401/403 Google Ads (authorization):
   - Developer token may be test-only (DEVELOPER_TOKEN_NOT_APPROVED). Use TEST accounts or request Standard Access.
   - LOGIN_CUSTOMER_ID must be your manager account; CUSTOMER_ID must be digits only; OAuth token must be valid.
@@ -57,6 +62,7 @@ A concise, one-page operations guide for common actions.
   - Usually transient. The worker uses a simple instance lock. Avoid multiple writers; consider Postgres (set DATABASE_URL) for more concurrency.
 
 ## Quick references
+
 - Status overview (campaign, hold, breaker, queue, recent errors):
   - python -m src --status
 - Queue operations:

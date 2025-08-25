@@ -4,6 +4,8 @@ from typing import Any, cast
 
 import streamlit as st
 
+from ui.testids import testid
+
 st.set_page_config(page_title="Reports", page_icon="📈", layout="wide")
 
 from ui._bootstrap import *  # noqa: F401,F403
@@ -14,8 +16,9 @@ from src.__main__ import get_credentials  # type: ignore
 from src.config import settings as cfg  # type: ignore
 from src.lsa_client import LSAClient  # type: ignore
 from src.lsa_reporting import LSAReportingClient  # type: ignore
-from ui.utils import DEFAULT_LEADS_MAP, prettify_headers, to_csv  # type: ignore
+from ui.utils import DEFAULT_LEADS_MAP, prettify_headers  # type: ignore
 from ui.utils import project as ui_project
+from ui.utils import to_csv  # type: ignore
 
 st.title("Reports")
 st.caption("Local Services Ads lead details, performance, and account aggregates")
@@ -70,16 +73,16 @@ with st.sidebar:
     st.subheader("Filters")
     today = date.today()
     default_start = today - timedelta(days=7)
-    start_val = st.date_input("Start", value=default_start, max_value=today)
+    start_val = st.date_input(testid("rep_start") + "Start", value=default_start, max_value=today)
     # Streamlit may return a bare date or a tuple; normalize to date
     start = cast(date, start_val[0] if isinstance(start_val, (list, tuple)) and start_val else start_val)
-    end_val = st.date_input("End", value=today, min_value=start, max_value=today)
+    end_val = st.date_input(testid("rep_end") + "End", value=today, min_value=start, max_value=today)
     end = cast(date, end_val[0] if isinstance(end_val, (list, tuple)) and end_val else end_val)
-    show_perf = st.toggle("Show performance (GAQL)", value=True)
-    show_leads = st.toggle("Show detailed leads", value=True)
-    show_agg = st.toggle("Show aggregates", value=True)
+    show_perf = st.toggle(testid("rep_show_perf") + "Show performance (GAQL)", value=True)
+    show_leads = st.toggle(testid("rep_show_leads") + "Show detailed leads", value=True)
+    show_agg = st.toggle(testid("rep_show_agg") + "Show aggregates", value=True)
     st.markdown("---")
-    only_charged = st.checkbox("Only charged leads", value=False)
+    only_charged = st.checkbox(testid("rep_only_charged") + "Only charged leads", value=False)
 
 cid = _login_cid()
 if not cid:

@@ -178,3 +178,8 @@ ui-alt:
 # Streamlit UI (auto-pick a free port 8510-8520)
 ui-auto:
 	. .venv/bin/activate && python tools/run_ui.py
+
+# MCP: start all locally configured servers (stdio/http) based on .mcp.json
+.PHONY: mcp-start
+mcp-start:
+	. .venv/bin/activate && python tools/mcp_start_all.py --timeout $${TIMEOUT:-8}
