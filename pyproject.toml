@@ -36,6 +36,12 @@ dev = [
 postgres = [
   "psycopg2-binary>=2.9.9",
 ]
+hf = [
+  # Pin exact versions to ensure runtime stability of the MCP HF server
+  "transformers==4.55.4",
+  "torch==2.2.2",
+  "numpy>=1.26,<2.0",
+]
 
 [project.scripts]
 weather-lsa = "src.__main__:main"
