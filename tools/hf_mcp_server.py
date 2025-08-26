@@ -21,8 +21,12 @@ import logging
 import os
 import threading
 from typing import Any
+from collections import OrderedDict
 
-from huggingface_hub import HfApi, hf_hub_download  # type: ignore[reportMissingImports]
+from huggingface_hub import (
+    HfApi,  # type: ignore[reportMissingImports]
+    hf_hub_download,
+)
 from huggingface_hub.utils import HfHubHTTPError  # type: ignore[reportMissingImports]
 from mcp.server.fastmcp import FastMCP
 
@@ -149,13 +153,11 @@ def hf_whoami() -> dict[str, Any]:
         return {"authenticated": False, "error": str(e)}
 
 
-"""Sentiment analysis support (lazy-loaded)."""
+"""Sentiment analysis support (lazy-loaded, model-aware, thread-safe)."""
 try:  # pragma: no cover - optional dependency
-    from transformers import (  # type: ignore[reportMissingImports]
-        AutoModelForSequenceClassification as _AutoModelForSequenceClassification,
-        AutoTokenizer as _AutoTokenizer,
-        pipeline as _hf_pipeline,
-    )
+    from transformers import AutoModelForSequenceClassification as _AutoModelForSequenceClassification  # type: ignore[reportMissingImports]
+    from transformers import AutoTokenizer as _AutoTokenizer
+    from transformers import pipeline as _hf_pipeline
 except Exception:  # pragma: no cover - optional dependency
     _hf_pipeline = None  # type: ignore
     _AutoTokenizer = None  # type: ignore
@@ -163,77 +165,121 @@ except Exception:  # pragma: no cover - optional dependency
 
 _SENTIMENT_MODEL_ENV_KEYS = ("SENTIMENT_MODEL_ID", "HF_SENTIMENT_MODEL")
 _DEFAULT_SENTIMENT_MODEL = "distilbert-base-uncased-finetuned-sst-2-english"
-_sentiment_pipe: Any | None = None
+_sentiment_pipes: OrderedDict[str, Any] = OrderedDict()
+_sentiment_lock = threading.Lock()
+_last_sentiment_error: str | None = None
+
+# Input limits
+_MAX_INPUT_CHARS = 2048
+_DEFAULT_MAXLEN = int(os.environ.get("HF_SENT_MAXLEN", "256") or 256)
+_DEFAULT_TRUNC = (os.environ.get("HF_SENT_TRUNC", "true").lower() in ("1", "true", "yes", "y"))
 
 
-def get_sentiment_pipeline() -> Any:
-    """Return a cached transformers sentiment pipeline; load on first use.
-
-    Loads tokenizer and model explicitly for clearer error surfaces and caches the pipeline globally.
-    """
-    global _sentiment_pipe
-    if _sentiment_pipe is not None:
-        return _sentiment_pipe
-    if _hf_pipeline is None:
-        raise RuntimeError(
-            "transformers not installed. Install into the HF venv: "
-            "~/.venvs/mcp-hf/bin/python -m pip install 'transformers' 'torch'"
-        )
-    # Pick model id from env overrides
-    model_id = None
+def _resolve_default_model_id() -> str:
+    model_id: str | None = None
     for k in _SENTIMENT_MODEL_ENV_KEYS:
         v = os.environ.get(k)
         if v:
             model_id = v
             break
-    if not model_id:
-        model_id = _DEFAULT_SENTIMENT_MODEL
-    try:
-        if _AutoTokenizer is not None and _AutoModelForSequenceClassification is not None:
-            tokenizer = _AutoTokenizer.from_pretrained(model_id)
-            model = _AutoModelForSequenceClassification.from_pretrained(model_id)
-            _sentiment_pipe = _hf_pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
-        else:
-            # Fallback to simple pipeline construction
-            _sentiment_pipe = _hf_pipeline("sentiment-analysis", model=model_id)
-        logger.info("Sentiment pipeline ready (model=%s)", model_id)
-        return _sentiment_pipe
-    except Exception as e:  # pragma: no cover - model download/runtime
-        logger.error("Failed to initialize sentiment pipeline: %s", e)
-        raise
+    return model_id or _DEFAULT_SENTIMENT_MODEL
+
+
+def get_sentiment_pipeline(model_id: str | None = None) -> Any:
+    """Return a cached transformers sentiment pipeline for a model; load on first use.
+
+    Maintains an LRU cache of size 2 keyed by model_id. Thread safe loader.
+    """
+    global _last_sentiment_error
+    if _hf_pipeline is None:
+        raise RuntimeError(
+            "transformers not installed. Install into the HF venv: "
+            "~/.venvs/mcp-hf/bin/python -m pip install 'transformers' 'torch'"
+        )
+    mid = model_id or _resolve_default_model_id()
+    # Fast path without lock
+    pipe = _sentiment_pipes.get(mid)
+    if pipe is not None:
+        return pipe
+    # Double-checked lock init
+    with _sentiment_lock:
+        pipe = _sentiment_pipes.get(mid)
+        if pipe is not None:
+            return pipe
+        try:
+            if _AutoTokenizer is not None and _AutoModelForSequenceClassification is not None:
+                tokenizer = _AutoTokenizer.from_pretrained(mid)
+                model = _AutoModelForSequenceClassification.from_pretrained(mid)
+                pipe = _hf_pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
+            else:
+                pipe = _hf_pipeline("sentiment-analysis", model=mid)
+            # Insert/update LRU
+            _sentiment_pipes[mid] = pipe
+            _sentiment_pipes.move_to_end(mid)
+            while len(_sentiment_pipes) > 2:
+                _sentiment_pipes.popitem(last=False)
+            _last_sentiment_error = None
+            logger.info("Sentiment pipeline ready (model=%s)", mid)
+            return pipe
+        except Exception as e:  # pragma: no cover - model download/runtime
+            _last_sentiment_error = str(e)
+            logger.error("Failed to initialize sentiment pipeline for %s: %s", mid, e)
+            raise
 
 
 @server.tool(
     name="hf_sentiment",
     title="Sentiment analysis",
     description=(
-        "Run Hugging Face sentiment analysis on text using transformers pipeline. "
-        "Set SENTIMENT_MODEL_ID or HF_SENTIMENT_MODEL to override the model "
-        "(default: distilbert-base-uncased-finetuned-sst-2-english)."
+        "Run Hugging Face sentiment analysis on text(s). Accepts a string or list of strings. "
+        "Optional model_id selects an alternate model (LRU cached). "
+        "Default model is distilbert-base-uncased-finetuned-sst-2-english."
     ),
 )
-def hf_sentiment(text: str) -> dict[str, Any]:
+def hf_sentiment(text: Any, model_id: str | None = None) -> Any:
     try:
-        pipe = get_sentiment_pipeline()
+        pipe = get_sentiment_pipeline(model_id)
     except Exception as e:  # pragma: no cover - optional env/deps
         logger.warning("hf_sentiment unavailable: %s", e)
         return {"error": "unavailable", "message": str(e)}
     try:
-        # transformers may return a list or a single dict depending on version/input
-        preds = pipe(text)
-        if isinstance(preds, list):
-            pred = preds[0] if preds else {"label": "UNKNOWN", "score": 0.0}
-        elif isinstance(preds, dict):
-            pred = preds
+        # Prepare inputs: support str or list[str]
+        is_single = isinstance(text, str)
+        texts: list[str]
+        if is_single:
+            s = text
+            if len(s) > _MAX_INPUT_CHARS:
+                s = s[: _MAX_INPUT_CHARS - 1] + "\u2026"  # ellipsis
+            texts = [s]
         else:
-            pred = {"label": "UNKNOWN", "score": 0.0}
-        # normalize keys and return only the required fields
-        label = pred.get("label")
-        score = float(pred.get("score", 0.0))
-        return {"label": label, "score": score}
+            texts = []
+            for s in list(text):
+                s = str(s)
+                if len(s) > _MAX_INPUT_CHARS:
+                    s = s[: _MAX_INPUT_CHARS - 1] + "\u2026"
+                texts.append(s)
+
+        preds_any = pipe(texts, truncation=_DEFAULT_TRUNC, max_length=_DEFAULT_MAXLEN)
+        # Normalize to list of {label, score}
+        norm: list[dict[str, Any]] = []
+        if isinstance(preds_any, list):
+            # Could be list[dict] or list[list[dict]] depending on return_all_scores
+            for item in preds_any:
+                if isinstance(item, list) and item:
+                    item = item[0]
+                if isinstance(item, dict):
+                    norm.append({"label": item.get("label"), "score": float(item.get("score", 0.0))})
+                else:
+                    norm.append({"label": "UNKNOWN", "score": 0.0})
+        elif isinstance(preds_any, dict):
+            norm.append({"label": preds_any.get("label"), "score": float(preds_any.get("score", 0.0))})
+        else:
+            norm.append({"label": "UNKNOWN", "score": 0.0})
+
+        return norm[0] if is_single else norm
     except Exception as e:  # pragma: no cover - runtime/model errors
         logger.exception("hf_sentiment runtime error: %s", e)
-        return {"text": text, "error": str(e)}
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
@@ -245,6 +291,31 @@ if __name__ == "__main__":
     @server.custom_route("/health", methods=["GET"])
     async def health(_: Request):  # type: ignore[reportUnusedFunction]
         return JSONResponse({"ok": True})
+
+    @server.custom_route("/healthz", methods=["GET"])
+    async def healthz(_: Request):  # type: ignore[reportUnusedFunction]
+        # Summarize current health and model status without forcing a load
+        try:
+            import transformers as _t  # type: ignore
+        except Exception:  # pragma: no cover
+            _t = None
+        try:
+            import torch as _tc  # type: ignore
+        except Exception:  # pragma: no cover
+            _tc = None
+
+        default_model = _resolve_default_model_id()
+        loaded = default_model in _sentiment_pipes
+        body: dict[str, Any] = {
+            "ok": True,
+            "model_loaded": loaded,
+            "model_id": default_model,
+            "transformers": getattr(_t, "__version__", None),
+            "torch": getattr(_tc, "__version__", None),
+        }
+        if _last_sentiment_error:
+            body["last_error"] = _last_sentiment_error
+        return JSONResponse(body)
 
     # Best-effort non-blocking warmup of the sentiment pipeline (will download the model on first run)
     def _warmup() -> None:
