@@ -484,9 +484,15 @@
             ],
             "presentation": {
                 "reveal": "always",
-                "panel": "dedicated",
-                "clear": true,
-                "group": "build"
+                "panel": "shared",
+                "clear": false
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
             }
         }
     ],
