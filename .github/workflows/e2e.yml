@@ -1,0 +1,47 @@
+name: E2E Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Python deps
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright + browsers
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run Playwright smoke tests
+        env:
+          E2E_AUTH_BYPASS: '1'
+          E2E_SPC_FIXTURE: '1'
+          E2E_FORCE_SVG: '1'
+        run: npx playwright test -g "Map smoke" --reporter=list,html
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report

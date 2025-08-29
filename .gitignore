@@ -46,6 +46,7 @@ secrets/
 tests/e2e/.auth/
 docs/img/e2e/
 docs/a11y/
+e2e_radar_counts.json
 
 # Agent memory / artifacts
 ops/logs/agent_actions.jsonl
