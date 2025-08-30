@@ -22,7 +22,18 @@ async function main() {
   console.log('Starting Streamlit...');
   const streamlit = spawn(STREAMLIT_CMD[0], STREAMLIT_CMD.slice(1), {
     stdio: 'inherit',
-    env: { ...process.env, STREAMLIT_SERVER_HEADLESS: 'true' },
+    env: {
+      ...process.env,
+      STREAMLIT_SERVER_HEADLESS: 'true',
+      STREAMLIT_SERVER_ENABLE_CORS: 'false',
+      STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION: 'false',
+      STREAMLIT_BROWSER_GATHERUSAGESTATS: 'false',
+      STREAMLIT_SERVER_ADDRESS: '127.0.0.1',
+  // Ensure the app renders without login during E2E and fixtures are enabled
+  E2E_AUTH_BYPASS: '1',
+  E2E_SPC_FIXTURE: '1',
+  E2E_FORCE_SVG: '1',
+    },
   });
 
   let exited = false;
@@ -30,8 +41,8 @@ async function main() {
 
   try {
     await waitForHealth(HEALTH_URL);
-    console.log('Streamlit is up. Running Playwright tests...');
-    const pw = spawn(PLAYWRIGHT_CMD[0], PLAYWRIGHT_CMD.slice(1), { stdio: 'inherit' });
+  console.log('Streamlit is up. Running Playwright tests...');
+  const pw = spawn(PLAYWRIGHT_CMD[0], PLAYWRIGHT_CMD.slice(1), { stdio: 'inherit', env: { ...process.env, E2E_BASE_URL: HEALTH_URL, E2E_AUTH_BYPASS: '1' } });
     await new Promise((resolve, reject) => {
       pw.on('exit', code => (code === 0 ? resolve() : reject(new Error('Playwright failed'))));
     });
