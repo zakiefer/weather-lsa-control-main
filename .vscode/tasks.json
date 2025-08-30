@@ -514,6 +514,13 @@
 			"label": "quick lint+type check",
 			"type": "shell",
 			"command": ".venv/bin/ruff check . && .venv/bin/pyright --level error"
+		},
+		{
+			"label": "install-gh",
+			"type": "shell",
+			"command": "bash scripts/ops/sysinstall.sh gh",
+			"isBackground": false,
+			"group": "build"
 		}
 	],
 	"inputs": [
