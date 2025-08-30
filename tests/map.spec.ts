@@ -3,7 +3,9 @@ import { test, expect, Page } from '@playwright/test';
 test.setTimeout(180_000);
 const BASE = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8520';
 
-const folium = (page: Page) => page.frameLocator('iframe').first();
+// Target the Folium map iframe specifically (Streamlit component iframe),
+// avoiding the earlier E2E helper iframe on the page.
+const folium = (page: Page) => page.frameLocator('iframe[src*="streamlit_folium"]').first();
 
 test('Map smoke: overlays and controls (SPC)', async ({ page }) => {
   await page.goto(`${BASE}/?spc=1&spcd=1&spc_fixture=1&svg=1`, { waitUntil: 'domcontentloaded' });
