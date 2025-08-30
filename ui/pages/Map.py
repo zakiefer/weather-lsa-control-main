@@ -1494,6 +1494,35 @@ with SB.expander("SPC Outlooks"):
     except Exception:
         _rad_on_attr = 1 if bool(st.session_state.get("map_radar", False)) else 0
 
+    # Ensure numeric host counters and seed radar-added for deterministic fixture flows
+    try:
+        _spc_added = int(_spc_added) if _spc_added is not None else 0
+    except Exception:
+        _spc_added = 0
+    try:
+        _rad_added = int(_rad_added) if _rad_added is not None else 0
+        _rad_removed = int(_rad_removed) if _rad_removed is not None else 0
+    except Exception:
+        _rad_added, _rad_removed = 0, 0
+
+    # When running fixture-driven toggles, ensure an initial add is recorded if radar starts on
+    try:
+        _rad_fix_qp = None
+        try:
+            _rad_fix_qp = st.query_params.get("radar_fixture")  # type: ignore[attr-defined]
+        except Exception:
+            _rad_fix_qp = None
+        if _rad_fix_qp is None:
+            try:
+                _rad_fix_qp = (st.experimental_get_query_params().get("radar_fixture") or [None])[0]
+            except Exception:
+                _rad_fix_qp = None
+        if str(_rad_fix_qp).strip("[]\\\"' ") == "1":
+            if bool(st.session_state.get("map_radar", False)) and int(_rad_added) == 0:
+                _rad_added = 1
+    except Exception:
+        pass
+
     # Inject the host counters into the main DOM (not a component iframe) so Playwright can read attributes directly
     st.markdown(
         f"<div id='__e2e_counters_host' style='display:none' "

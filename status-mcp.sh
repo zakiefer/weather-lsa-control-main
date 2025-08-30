@@ -36,28 +36,50 @@ chmod +x ./status-mcp.sh 2>/dev/null || true
 
 # Build configured server list from servers.conf (name|command)
 SERVER_NAMES=()
-if [[ -f ".mcp/servers.conf" ]]; then
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ -z "${line// /}" || "${line:0:1}" == "#" ]] && continue
-    name="${line%%|*}"; name="${name//[[:space:]]/}"
-    [[ -n "$name" ]] && SERVER_NAMES+=("$name")
-  done < .mcp/servers.conf
+if [[ "${SKIP_SERVERS_CONF:-0}" != "1" ]]; then
+  if [[ -f ".mcp/servers.conf" ]]; then
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ -z "${line// /}" || "${line:0:1}" == "#" ]] && continue
+      name="${line%%|*}"; name="${name//[[:space:]]/}"
+      [[ -n "$name" ]] && SERVER_NAMES+=("$name")
+    done < .mcp/servers.conf
+  fi
 fi
 
 # Also include servers from VS Code JSON if explicitly enabled (opt-in)
 add_from_json() {
   local json_path="$1"
   [[ -f "$json_path" ]] || return 0
-  while IFS= read -r name; do
-    [[ -n "$name" ]] && SERVER_NAMES+=("$name")
+  while IFS= read -r line; do
+    # Lines may be either server names or WARN: messages
+    if [[ "$line" == WARN:* ]]; then
+      # Print user-friendly warning; strip the prefix
+      echo "${line#WARN: }"
+    elif [[ -n "$line" ]]; then
+      SERVER_NAMES+=("$line")
+    fi
   done < <(python3 - "$json_path" <<'PY'
-import json, sys
+import json, re, sys
 p = sys.argv[1]
 try:
   with open(p, 'r', encoding='utf-8') as f:
-    cfg = json.load(f)
-  servers = cfg.get('servers', {}) or {}
-  for n in servers.keys():
+    s = f.read()
+  # JSONC compatibility: remove line comments that start a line, and block comments
+  s = re.sub(r'(?m)^[ \t]*//.*$', '', s)
+  s = re.sub(r'/\*.*?\*/', '', s, flags=re.S)
+  # Remove trailing commas before } or ]
+  s = re.sub(r',\s*([}\]])', r'\1', s)
+  cfg = json.loads(s)
+  servers = (cfg.get('servers') or {})
+  for n, obj in servers.items():
+    if not isinstance(n, str) or not n.strip():
+      continue
+    # Special-case: ignore invalid figma HTTP entry using env port placeholder
+    if n == 'figma' and isinstance(obj, dict):
+      url = obj.get('url')
+      if isinstance(url, str) and '${env:FIGMA_HTTP_PORT}' in url:
+        print('WARN: ⚠️ Ignored invalid Figma MCP entry using ${env:FIGMA_HTTP_PORT}')
+        continue
     print(n)
 except Exception:
   pass
@@ -66,7 +88,8 @@ PY
 }
 
 if [[ "${INCLUDE_VSCODE_MCP_JSON:-0}" = "1" ]]; then
-  add_from_json ".vscode/mcp.json"
+  json_path="${VSCODE_MCP_JSON_PATH:-.vscode/mcp.json}"
+  add_from_json "$json_path"
 fi
 
 # Deduplicate while preserving order (Bash 3.2 compatible)

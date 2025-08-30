@@ -58,7 +58,6 @@ install_npm imagesorcery-mcp imagesorcery-mcp
 install_npm codacy-mcp codacy-mcp
 install_npm sequentialthinking-mcp sequentialthinking-mcp
 install_npm memory-mcp memory-mcp
-install_npm apify-mcp apify-mcp
 install_npm clarity-mcp clarity-mcp
 install_npm firecrawl-mcp firecrawl-mcp
 

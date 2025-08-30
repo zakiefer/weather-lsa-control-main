@@ -1,0 +1,65 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('Map smoke', () => {
+  test('Map overlays and controls', async ({ page }) => {
+    await page.goto('http://127.0.0.1:8501/?page=Map', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 15000 });
+
+    // SPC toggle
+    const spc = page.getByRole('checkbox', { name: /SPC/i });
+    await spc.check();
+  const spcPolyCount = await page.locator('path.leaflet-interactive').count();
+  expect(spcPolyCount).toBeGreaterThan(0);
+
+    // Earthquakes toggle and min magnitude
+    const eq = page.getByRole('checkbox', { name: /Earthquakes/i });
+    await eq.check();
+    const magSlider = page.getByRole('slider', { name: /Min magnitude/i });
+    const markerCountBefore = await page.locator('.leaflet-marker-icon').count();
+    for (let i = 0; i < 3; i++) await magSlider.press('ArrowRight');
+    await expect.poll(async () => await page.locator('.leaflet-marker-icon').count()).not.toBe(markerCountBefore);
+
+    // Tropical toggle
+    const tropical = page.getByRole('checkbox', { name: /Tropical/i });
+    await tropical.check();
+  const tropicalMarkerCount = await page.locator('.leaflet-marker-icon').count();
+  expect(tropicalMarkerCount).toBeGreaterThan(0);
+
+    // Wildfires toggle
+    const wildfires = page.getByRole('checkbox', { name: /Wildfires/i });
+    await wildfires.check();
+  const wildfirePolyCount = await page.locator('path.leaflet-interactive').count();
+  expect(wildfirePolyCount).toBeGreaterThan(0);
+
+    // LSR toggle and paths
+    const lsr = page.getByRole('checkbox', { name: /LSR/i });
+    await lsr.check();
+    const paths = page.getByRole('checkbox', { name: /paths/i });
+    await paths.check();
+  const lsrMarkerCount = await page.locator('.leaflet-marker-icon').count();
+  expect(lsrMarkerCount).toBeGreaterThan(0);
+  const lsrPathCount = await page.locator('path.leaflet-interactive').count();
+  expect(lsrPathCount).toBeGreaterThan(0);
+
+    // Archive mode + bottom timeline
+    const archive = page.getByRole('checkbox', { name: /Archive mode/i });
+    await archive.check();
+    const bottomTimeline = page.getByRole('checkbox', { name: /Use bottom timeline/i });
+    await bottomTimeline.check();
+    const timeline = page.locator('.timeline, .stTimeline, .st-timeline');
+    await expect(timeline).toBeVisible({ timeout: 10000 });
+    const play = page.getByRole('button', { name: /Play/i });
+    await play.click();
+    await expect.poll(async () => await timeline.textContent()).not.toBeNull();
+
+    // Only triggered, Rules, Filters
+    const onlyTriggered = page.getByRole('checkbox', { name: /Only triggered/i });
+    await onlyTriggered.check();
+    const rules = page.getByRole('checkbox', { name: /Rules/i });
+    await rules.check();
+    const filter = page.getByRole('checkbox', { name: /Filter/i });
+    await filter.check();
+  const markerCountAfterFilters = await page.locator('.leaflet-marker-icon').count();
+  expect(markerCountAfterFilters).toBeGreaterThan(0);
+  });
+});

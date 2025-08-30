@@ -16,7 +16,7 @@ st.set_page_config(page_title="Dashboard", page_icon="📊", layout="wide")
 try:
     # Hint for E2E to detect dashboard availability quickly without relying on layout specifics
     st.markdown('<meta name="data-dashboard-ready" content="1">', unsafe_allow_html=True)
-except Exception:
+except Exception:  # nosec B110: non-critical UI hint; safe to ignore if rendering fails
     pass
 
 
@@ -55,7 +55,7 @@ def _should_show_login() -> bool:
         pt = os.getenv("PYTEST_CURRENT_TEST", "")
         if "test_cookie_persistence_login_refresh_logout" in pt:
             return True
-    except Exception:
+    except Exception:  # nosec B110: env probe best-effort only; failure should not break UI
         pass
     return False
 

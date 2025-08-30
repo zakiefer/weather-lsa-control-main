@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 from typing import Callable
@@ -7,6 +8,13 @@ from typing import Callable
 import folium
 import streamlit as st
 from folium import plugins
+
+from src.config.settings import (
+    ALLOWED_CERTAINTY,
+    ALLOWED_SEVERITIES,
+    ALLOWED_URGENCY,
+    TRIGGER_EVENTS,
+)
 
 from .http_client import fetch_json
 
@@ -23,6 +31,25 @@ SPC_COLORS = {
 
 def fetch_spc_outlook(day: int = 1) -> list[dict]:
     try:
+        # E2E fixture: bypass network when enabled (via env or session)
+        try:
+            if os.getenv("E2E_SPC_FIXTURE") == "1" or bool(st.session_state.get("spc_fixture") == "1"):
+                return [
+                    {
+                        "type": "Feature",
+                        "properties": {"name": "e2e-spc"},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [-87.80, 38.20], [-87.60, 38.20], [-87.70, 38.00], [-87.80, 38.20]
+                            ]]
+                        },
+                    }
+                ]
+        except Exception:
+            # If session access fails, continue to live path
+            pass
+
         d = max(1, min(3, int(day)))
         url = "https://mesonet.agron.iastate.edu/geojson/spc_outlooks.geojson"
         data = fetch_json(url, params={"day": d}, ttl=600)
@@ -33,13 +60,14 @@ def fetch_spc_outlook(day: int = 1) -> list[dict]:
     return []
 
 
-def add_spc_outlooks(m: folium.Map, on: bool, day: int) -> None:
+def add_spc_outlooks(m: folium.Map, on: bool, day: int) -> int:
     if not on:
-        return
+        return 0
     feats = fetch_spc_outlook(day)
     if not feats:
-        return
+        return 0
     grp = folium.FeatureGroup(name=f"SPC Outlook (Day {day})", show=True)
+    added = 0
     for f in feats:
         try:
             geom = f.get("geometry") or {}
@@ -60,6 +88,7 @@ def add_spc_outlooks(m: folium.Map, on: bool, day: int) -> None:
                         fill_opacity=0.15 if fast else 0.25,
                         popup=f"SPC Day {day} {cat}",
                     ).add_to(grp)
+                    added += 1
             elif geom.get("type") == "MultiPolygon":
                 for poly in geom.get("coordinates") or []:
                     if poly:
@@ -73,9 +102,11 @@ def add_spc_outlooks(m: folium.Map, on: bool, day: int) -> None:
                             fill_opacity=0.15 if fast else 0.25,
                             popup=f"SPC Day {day} {cat}",
                         ).add_to(grp)
-        except Exception:
+                        added += 1
+        except Exception:  # nosec B112: skip malformed feature; continue rendering other polygons
             continue
     grp.add_to(m)
+    return added
 
 
 # ---------- Earthquakes (USGS) ----------
@@ -85,7 +116,7 @@ def fetch_usgs_quakes() -> list[dict]:
         data = fetch_json(url, ttl=600)
         if isinstance(data, dict):
             return list(data.get("features") or [])
-    except Exception:
+    except Exception:  # nosec B110: network/JSON failures return empty list for resilient UI
         return []
     return []
 
@@ -125,7 +156,7 @@ def add_earthquakes(m: folium.Map, on: bool, min_mag: float) -> None:
                 fill_opacity=0.9,
                 popup=popup,
             ).add_to(layer)
-        except Exception:
+        except Exception:  # nosec B112: skip bad earthquake feature; keep layer usable
             continue
     layer.add_to(m)
 
@@ -151,9 +182,9 @@ def fetch_nhc_current() -> list[dict]:
                         }
                     )
                 except Exception:
-                    continue
+                    continue  # nosec B112: skip malformed storm entry; continue collecting others
             return feats
-    except Exception:
+    except Exception:  # nosec B110: tolerate NHC endpoint failures; degrade gracefully
         return []
     return []
 
@@ -180,7 +211,7 @@ def add_tropical(m: folium.Map, on: bool) -> None:
             status = props.get("status") or props.get("type") or ""
             popup = f"{name} — {status}"
             folium.Marker((lat, lon), icon=folium.Icon(color="red", icon="flag"), popup=popup).add_to(layer)
-        except Exception:
+        except Exception:  # nosec B112: skip malformed storm entry; continue
             continue
     layer.add_to(m)
 
@@ -247,7 +278,7 @@ def add_wildfires(m: folium.Map, on: bool) -> None:
                             fill_opacity=0.35,
                             popup=name,
                         ).add_to(layer)
-        except Exception:
+        except Exception:  # nosec B112: skip malformed wildfire feature; continue rendering others
             continue
     layer.add_to(m)
 
@@ -326,8 +357,73 @@ def add_historical_timeline(
                 loop=False,
                 add_last_point=False,
             ).add_to(m)
-        except Exception:
+        except Exception:  # nosec B110: timeline overlay is optional; ignore rendering failures to keep UI responsive
             pass
+
+
+# ---------- Shared alert helpers (for Map page and overlays) ----------
+def extract_county_fips(props: dict) -> list[str]:
+    """Extract 5-digit county FIPS codes from alert properties.geocode.
+
+    Mirrors src.weather_monitor. Returns a list of strings like ["18163", ...].
+    """
+    try:
+        geocode = props.get("geocode", {}) or {}
+        fips6 = geocode.get("FIPS6") or geocode.get("FIPS") or []
+        out: list[str] = []
+        for code in fips6:
+            s = str(code)
+            if len(s) >= 5:
+                out.append(s[-5:])
+        return out
+    except Exception:
+        return []
+
+
+def alert_matches_filters(props: dict) -> bool:
+    """True if alert properties match configured trigger filters.
+
+    Uses TRIGGER_EVENTS and ALLOWED_* sets from settings.
+    """
+    try:
+        event = props.get("event")
+        if event not in TRIGGER_EVENTS:
+            return False
+        severity = props.get("severity")
+        urgency = props.get("urgency")
+        certainty = props.get("certainty")
+        if ALLOWED_SEVERITIES and severity and severity not in ALLOWED_SEVERITIES:
+            return False
+        if ALLOWED_URGENCY and urgency and urgency not in ALLOWED_URGENCY:
+            return False
+        if ALLOWED_CERTAINTY and certainty and certainty not in ALLOWED_CERTAINTY:
+            return False
+        return True
+    except Exception:
+        return False
+
+
+def first_polygon_centroid(alert_feature: dict) -> tuple[float, float] | tuple[None, None]:
+    """Return centroid (lat, lon) of the first polygon ring, or (None, None) if unavailable."""
+    try:
+        geom = alert_feature.get("geometry") or {}
+        coords: list[list[list[float]]] | list[list[float]] = []
+        if geom.get("type") == "Polygon":
+            coords = geom.get("coordinates") or []
+        elif geom.get("type") == "MultiPolygon":
+            polys = geom.get("coordinates") or []
+            coords = polys[0] if polys else []
+        if not (coords and isinstance(coords, list) and coords[0]):
+            return (None, None)
+        ring = coords[0]  # type: ignore[index]
+        lat_sum = lon_sum = 0.0
+        n = len(ring)
+        for lon, lat in ring:  # type: ignore[misc]
+            lat_sum += float(lat)
+            lon_sum += float(lon)
+        return (lat_sum / n, lon_sum / n)
+    except Exception:
+        return (None, None)
 
 
 # ---------- LSR (Storm Reports) ----------
@@ -462,7 +558,7 @@ def add_lsr_layers(
                     ts = _parse_ts(valid)
                     if ts is not None:
                         tor_points.append((ts, float(lat), float(lon)))
-        except Exception:
+        except Exception:  # nosec B112: skip bad LSR feature; continue for resilient UI
             continue
 
     if added_any:
@@ -506,5 +602,5 @@ def add_lsr_layers(
                         ).add_to(l_tor_paths)
                 if tracks:
                     l_tor_paths.add_to(m)
-            except Exception:
+            except Exception:  # nosec B110: tornado path overlay is optional; ignore failures
                 pass

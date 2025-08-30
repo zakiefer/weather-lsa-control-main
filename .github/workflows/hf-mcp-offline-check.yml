@@ -1,0 +1,16 @@
+name: HF MCP Offline Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Make verify-local.sh executable
+        run: chmod +x verify-local.sh
+      - name: Run offline verifier
+        run: ./verify-local.sh

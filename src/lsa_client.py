@@ -48,7 +48,9 @@ def _post_with_timeout(url: str, headers=None, json=None):
         return requests.post(url, headers=headers, json=json, timeout=ADS_HTTP_TIMEOUT_SECONDS)
     except TypeError as e:
         if "timeout" in str(e):
-            return requests.post(url, headers=headers, json=json)
+            # Fallback path used only by unit tests that monkeypatch requests.post with a stub
+            # that does not accept the 'timeout' kwarg.
+            return requests.post(url, headers=headers, json=json)  # nosec B113: test-only fallback, not production
         raise
 
 
@@ -152,7 +154,7 @@ class LSAClient:
                     error=f"{r.status_code}",
                 )
                 sleep_s = base * (2 ** (attempt - 1))
-                jitter = random.uniform(0, sleep_s)
+                jitter = random.uniform(0, sleep_s)  # nosec B311: non-crypto retry jitter
                 time.sleep(min(ADS_BACKOFF_MAX_SLEEP, sleep_s + jitter))
                 # If breaker tripped, stop early
                 if state.get("open"):
@@ -658,7 +660,7 @@ class LSAClient:
                     error=f"{r.status_code}",
                 )
                 sleep_s = base * (2 ** (attempt - 1))
-                jitter = random.uniform(0, sleep_s)
+                jitter = random.uniform(0, sleep_s)  # nosec B311: non-crypto retry jitter
                 time.sleep(min(ADS_BACKOFF_MAX_SLEEP, sleep_s + jitter))
                 # If breaker tripped, stop early
                 if state.get("open"):

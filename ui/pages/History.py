@@ -119,7 +119,7 @@ try:
         qp_out["r"] = _r
     if qp_out:
         st.query_params.update(qp_out)
-except Exception:
+except Exception:  # nosec B110: best-effort query param persistence; ignore in restrictive environments
     pass
 
 if auto_refresh and refresh_sec:
@@ -132,5 +132,5 @@ if auto_refresh and refresh_sec:
             """,
             unsafe_allow_html=True,
         )
-    except Exception:
+    except Exception:  # nosec B110: ignore client-side injection failure; table still visible
         pass

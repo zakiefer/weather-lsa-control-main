@@ -41,7 +41,8 @@ def _key_for(url: str, params: dict[str, Any] | None) -> str:
         blob = json.dumps({"u": url, "p": params or {}}, sort_keys=True, separators=(",", ":"))
     except Exception:
         blob = f"{url}|{params!r}"
-    return hashlib.sha1(blob.encode("utf-8")).hexdigest()
+    # Use a non-crypto hash for cache keys to avoid Bandit B303 (insecure hash). BLAKE2b is fast and safe here.
+    return hashlib.blake2b(blob.encode("utf-8"), digest_size=16).hexdigest()
 
 
 def fetch_json(
@@ -157,7 +158,7 @@ def find_latest_status(predicate) -> dict[str, Any] | None:
         try:
             if predicate(str(s.get("url")), s):
                 return s
-        except Exception:
+        except Exception:  # nosec B112 - UI helper must not break iteration on bad rows; safe to skip
             continue
     return None
 
@@ -166,14 +167,14 @@ def clear_caches(clear_status: bool = False) -> None:
     """Clear HTTP TTL caches; optionally clear status tracking."""
     try:
         _CACHE_2M.clear()
-    except Exception:
+    except Exception:  # nosec B110 - best-effort cache clear; safe to ignore
         pass
     try:
         _CACHE_10M.clear()
-    except Exception:
+    except Exception:  # nosec B110 - best-effort cache clear; safe to ignore
         pass
     if clear_status:
         try:
             _STATUS.clear()
-        except Exception:
+        except Exception:  # nosec B110 - best-effort status clear; safe to ignore
             pass

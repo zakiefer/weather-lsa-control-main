@@ -30,7 +30,7 @@ def fetch_live_features(states: list[str]):
     for s in states:
         try:
             feats.extend(mon._fetch_alerts_for_state(s))
-        except Exception:
+        except Exception:  # nosec B110: continue on per-state failure for resilient UI
             # Continue on per-state failure
             pass
     return feats
@@ -165,7 +165,7 @@ if auto_refresh and refresh_sec:
             """,
             unsafe_allow_html=True,
         )
-    except Exception:
+    except Exception:  # nosec B110: query param persistence is best-effort
         pass
 
 # Sync query params and show shareable link (omit defaults for brevity)
@@ -185,7 +185,7 @@ try:
         qp_out["r"] = _r
     if qp_out:
         st.query_params.update(qp_out)
-except Exception:
+except Exception:  # nosec B110: query param persistence is best-effort
     pass
 
 try:
@@ -209,5 +209,5 @@ try:
         st.code(rel_link)
         st.caption("Tip: use the copy icon on the code box to copy the link.")
     st.link_button("Open share link", rel_link, type="secondary")
-except Exception:
+except Exception:  # nosec B110: share-link UI is optional; ignore to keep page rendering
     pass

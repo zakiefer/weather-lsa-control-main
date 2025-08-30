@@ -27,7 +27,8 @@ def _check_db() -> bool:
             return True
         finally:
             conn.close()
-    except Exception:
+    except Exception as e:
+        logging.exception("health:_check_db failed: %s", e)
         return False
 
 
@@ -39,7 +40,8 @@ def _check_creds() -> bool:
         if not os.path.exists(TOKEN_FILE):
             return False
         return True
-    except Exception:
+    except Exception as e:
+        logging.exception("health:_check_creds failed: %s", e)
         return False
 
 
@@ -76,6 +78,7 @@ def _check_smtp() -> dict:
     except Exception as e:
         info["ok"] = False
         info["error"] = str(e)
+        logging.exception("health:_check_smtp failed: %s", e)
     return info
 
 
@@ -93,8 +96,8 @@ def _clock_skew() -> dict:
         ts = _CLOCK_CACHE.get("ts")
         if ts and isinstance(ts, datetime) and (now - ts) < timedelta(seconds=_CLOCK_TTL_SECONDS):
             return _CLOCK_CACHE["data"] or {}
-    except Exception:
-        pass
+    except Exception as e:
+        logging.debug("health:_clock_skew cache read failed: %s", e)  # nosec: best-effort telemetry
     result = {}
     try:
         import requests as _req
@@ -112,14 +115,15 @@ def _clock_skew() -> dict:
             now = datetime.now(timezone.utc)
             skew_s = int(abs((now - dt).total_seconds()))
             result = {"skew_seconds": skew_s, "server_time": dt.isoformat(), "source": "generate_204"}
-    except Exception:
+    except Exception as e:
         # Leave result empty on failure
+        logging.debug("health:_clock_skew request failed: %s", e)  # nosec: best-effort telemetry
         result = {}
     try:
         _CLOCK_CACHE["ts"] = datetime.now(timezone.utc)
         _CLOCK_CACHE["data"] = result
-    except Exception:
-        pass
+    except Exception as e:
+        logging.debug("health:_clock_skew cache write failed: %s", e)  # nosec: best-effort telemetry
     return result
 
 
@@ -128,11 +132,13 @@ def compute_readiness() -> dict:
     creds_ok = _check_creds()
     try:
         open_now, until = is_breaker_open("ads")
-    except Exception:
+    except Exception as e:
+        logging.exception("health:is_breaker_open failed: %s", e)
         open_now, until = (False, None)
     try:
         qs = get_queue_stats()
-    except Exception:
+    except Exception as e:
+        logging.exception("health:get_queue_stats failed: %s", e)
         qs = {"queued": 0, "running": 0, "done": 0, "error": 0}
     smtp = _check_smtp()
     clock = _clock_skew()
@@ -176,9 +182,11 @@ class _HealthHandler(BaseHTTPRequestHandler):
 
 def start_health_server(port: int) -> None:
     try:
-        server = ThreadingHTTPServer(("0.0.0.0", int(port)), _HealthHandler)
+        bind_all = str(os.environ.get("BIND_ALL", "")).lower() in ("1", "true", "yes")
+        host = "0.0.0.0" if bind_all else "127.0.0.1"  # nosec B104: allow external bind only when BIND_ALL=true
+        server = ThreadingHTTPServer((host, int(port)), _HealthHandler)
         t = threading.Thread(target=server.serve_forever, name="health-server", daemon=True)
         t.start()
-        logging.info("Health endpoints listening on :%d (/healthz, /readyz)", int(port))
+        logging.info("Health endpoints listening on %s:%d (/healthz, /readyz)", host, int(port))
     except Exception as e:
         logging.warning("Health server failed to start: %s", e)

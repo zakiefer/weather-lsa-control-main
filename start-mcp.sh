@@ -46,6 +46,18 @@ if [[ -z "${OPENAI_MODEL}" ]]; then
   export OPENAI_MODEL="gpt-5"
 fi
 
+# Enforce local-only Hugging Face/Transformers operation for any MCP servers that may use them.
+# These can still be overridden by the environment or per-command prefixes in .mcp/servers.conf.
+: "${HF_HOME:="${ROOT_DIR}/.cache/huggingface"}"
+export HF_HOME
+# Primary offline switches
+export HF_HUB_OFFLINE="1"
+export TRANSFORMERS_OFFLINE="1"
+# Disable experimental transfer acceleration (may perform network checks)
+export HF_HUB_ENABLE_HF_TRANSFER="0"
+# If datasets are used anywhere, keep them offline as well (harmless otherwise)
+export HF_DATASETS_OFFLINE="1"
+
 # ------------ Args ------------
 TIMEOUT=2
 NO_WAIT=0

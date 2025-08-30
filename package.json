@@ -10,11 +10,27 @@
     "mcp:figma:http:start": "zsh -lc 'mkdir -p logs; source ./scripts/ops/load_env.zsh; node mcp/figma-server-http.js 1>>logs/figma.stdout 2>>logs/figma.stderr & echo $! > logs/figma.pid'",
     "mcp:figma:http:status": "bash -lc 'PID=$(cat logs/figma.pid 2>/dev/null || true); if [ -n \"$PID\" ] && kill -0 $PID 2>/dev/null; then echo RUNNING:$PID; else echo STOPPED; fi; lsof -nP -iTCP:3845 -sTCP:LISTEN || true; curl -sS -o /dev/null -w \"HEALTH_%{http_code}\\n\" http://127.0.0.1:3845/health || echo HEALTH_000'",
     "mcp:figma:http:stop": "bash -lc 'PID=$(cat logs/figma.pid 2>/dev/null || true); [ -n \"$PID\" ] && kill $PID 2>/dev/null || true; rm -f logs/figma.pid'",
-    "test:ci": "bash scripts/run_pytest.sh"
+    "test:ci": "bash scripts/run_pytest.sh",
+    "apify:probe": "zsh -lc 'source ./scripts/ops/load_env.zsh 2>/dev/null || true; node tools/apify_http_probe.mjs'",
+    "apify:search-details": "zsh -lc 'source ./scripts/ops/load_env.zsh 2>/dev/null || true; node tools/apify_search_details.mjs'",
+    "apify:search-plan": "zsh -lc 'source ./scripts/ops/load_env.zsh 2>/dev/null || true; node tools/apify_search_plan.mjs'",
+    "apify:discover": "node tools/apify_discovery_log.mjs",
+    "firecrawl:discover": "node tools/firecrawl_discovery_log.mjs",
+    "hf:probe": "node tools/hf_http_probe.mjs",
+    "sentry:http:start": "zsh -lc 'mkdir -p logs; node mcp/sentry-server-http.js 1>>logs/sentry.stdout 2>>logs/sentry.stderr & echo $! > logs/sentry.pid'",
+    "sentry:http:status": "bash -lc 'PID=$(cat logs/sentry.pid 2>/dev/null || true); if [ -n \"$PID\" ] && kill -0 $PID 2>/dev/null; then echo RUNNING:$PID; else echo STOPPED; fi; lsof -nP -iTCP:3999 -sTCP:LISTEN || true; curl -sS -o /dev/null -w \"HEALTH_%{http_code}\\n\" http://127.0.0.1:3999/health || echo HEALTH_000'",
+    "sentry:http:stop": "bash -lc 'PID=$(cat logs/sentry.pid 2>/dev/null || true); [ -n \"$PID\" ] && kill $PID 2>/dev/null || true; rm -f logs/sentry.pid'",
+    "sentry:probe": "node tools/sentry_http_probe.mjs",
+    "sentry:diag": "node tools/sentry_token_diag.mjs",
+    "e2e": "node e2e-runner.mjs",
+    "test:e2e": "playwright test -g 'Map smoke'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
     "express": "^4.19.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "node-fetch": "^3.3.2"
+  }
 }

@@ -290,6 +290,19 @@
         "CLARITY_PROJECT_ID": "${env:CLARITY_PROJECT_ID}",
         "CLARITY_API_TOKEN": "${env:CLARITY_API_TOKEN}"
       }
+    },
+    "huggingface": {
+      "type": "http",
+      "name": "Hugging Face (local)",
+      "url": "http://127.0.0.1:3865/mcp",
+      "healthUrl": "http://127.0.0.1:3865/healthz",
+      "initTimeoutMs": 90000,
+      "requestTimeoutMs": 15000,
+      "maxRetries": 1,
+      "env": {
+        "HF_HUB_OFFLINE": "1",
+        "HF_HOME": "${workspaceFolder}/.cache/huggingface"
+      }
     }
   }
 }

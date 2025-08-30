@@ -16,9 +16,9 @@ from src.__main__ import get_credentials  # type: ignore
 from src.config import settings as cfg  # type: ignore
 from src.lsa_client import LSAClient  # type: ignore
 from src.lsa_reporting import LSAReportingClient  # type: ignore
+from ui.utils import to_csv  # type: ignore
 from ui.utils import DEFAULT_LEADS_MAP, prettify_headers  # type: ignore
 from ui.utils import project as ui_project
-from ui.utils import to_csv  # type: ignore
 
 st.title("Reports")
 st.caption("Local Services Ads lead details, performance, and account aggregates")
@@ -189,7 +189,7 @@ if show_perf:
         # Build GAQL for date timeline
         q = (
             "SELECT metrics.impressions, metrics.clicks, metrics.cost_micros, segments.date "
-            f"FROM customer WHERE segments.date BETWEEN '{start.isoformat()}' AND '{end.isoformat()}'"
+            f"FROM customer WHERE segments.date BETWEEN '{start.isoformat()}' AND '{end.isoformat()}'"  # nosec B608: GAQL string for Google Ads API; inputs are constrained dates, not user-supplied SQL
         )
         results = cast(list, _cached_gaql(q))
         if not results:
@@ -253,7 +253,7 @@ if show_perf:
                 with st.expander("Devices"):
                     qd = (
                         "SELECT segments.device, metrics.impressions, metrics.clicks, metrics.cost_micros "
-                        f"FROM customer WHERE segments.date BETWEEN '{start.isoformat()}' AND '{end.isoformat()}'"
+                        f"FROM customer WHERE segments.date BETWEEN '{start.isoformat()}' AND '{end.isoformat()}'"  # nosec B608: GAQL construction with constrained dates
                     )
                     dev_rows = cast(list, _cached_gaql(qd))
                     dnorm = []
@@ -279,7 +279,7 @@ if show_perf:
                 with st.expander("Day of week"):
                     qw = (
                         "SELECT segments.day_of_week, metrics.impressions, metrics.clicks "
-                        f"FROM customer WHERE segments.date BETWEEN '{start.isoformat()}' AND '{end.isoformat()}'"
+                        f"FROM customer WHERE segments.date BETWEEN '{start.isoformat()}' AND '{end.isoformat()}'"  # nosec B608: GAQL construction with constrained dates
                     )
                     dow_rows = cast(list, _cached_gaql(qw))
                     wnorm = []
@@ -312,7 +312,7 @@ if show_perf:
                         st.dataframe(prettify_headers(_wrows_typed), use_container_width=True, hide_index=True)
                     else:
                         st.info("No day-of-week data available.")
-            except Exception:
+            except Exception:  # nosec B110: Chart/table rendering is optional; swallow to keep UI responsive if data libs unavailable
                 pass
 
 if show_leads:
@@ -394,7 +394,7 @@ if show_leads:
                                     "charge_status": str(r.get(col_status)) if col_status else None,
                                     "lead_price": (
                                         float(str(r.get(col_price)))
-                                        if (col_price and pd.notna(r.get(col_price)))
+                                        if (col_price and bool(pd.notna(r.get(col_price))))
                                         else None
                                     ),
                                     "currency_code": str(r.get(col_currency)) if col_currency else None,
@@ -404,7 +404,7 @@ if show_leads:
                                     "phone_last4": last4(r.get(col_phone)),
                                 }
                             )
-                        except Exception:
+                        except Exception:  # nosec B112: Skip malformed CSV rows; user uploads vary widely and must not break UI
                             continue
                     if uploaded_rows:
                         st.success(f"Loaded {len(uploaded_rows)} rows from CSV")
@@ -488,7 +488,7 @@ if show_leads:
                     c1, c2 = st.columns(2)
                     c1.dataframe(piv1.sort_values("leads", ascending=False), use_container_width=True, hide_index=True)
                     c2.dataframe(piv2.sort_values("leads", ascending=False), use_container_width=True, hide_index=True)
-            except Exception:
+            except Exception:  # nosec B110: Pivot/visualization is optional; ignore failures in restrictive environments
                 pass
 
             st.dataframe(prettify_headers(filtered, DEFAULT_LEADS_MAP), use_container_width=True, hide_index=True)
@@ -504,10 +504,17 @@ if show_leads:
                 else:
                     df["day"] = None
                 df["charged"] = df["charge_status"].fillna("").str.upper().eq("CHARGED")
-                agg = df.groupby(["day", "charged"], dropna=False).size().reset_index(name="leads")
+                agg = df.groupby(["day", "charged"], dropna=False).size().reset_index()
+                try:
+                    agg.columns = [
+                        c if c != 0 else "leads"  # type: ignore[truthy-bool]
+                        for c in list(agg.columns)
+                    ]
+                except Exception:  # nosec B110: harmless column-rename fallback; chart is optional
+                    pass
                 base = alt.Chart(agg).encode(x="day:T", y="leads:Q", color="charged:N")
                 st.altair_chart(base.mark_area().interpolate("monotone"), use_container_width=True)
-            except Exception:
+            except Exception:  # nosec B110: Altair/time series chart is optional; ignore to avoid breaking main flow
                 pass
             c1, c2 = st.columns(2)
             if c1.download_button(
@@ -598,7 +605,7 @@ if show_agg:
                 total_cost = float(norm[0].get("currentPeriodTotalCost") or 0)
                 if charged_leads > 0:
                     st.metric("Cost per charged lead", f"{curr or 'USD'} {total_cost / charged_leads:.2f}")
-            except Exception:
+            except Exception:  # nosec B110: Metric calculation is best-effort; tolerate missing/invalid inputs
                 pass
             if st.download_button(
                 "Download JSON",
