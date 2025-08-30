@@ -509,6 +509,11 @@
 			"type": "shell",
 			"command": ".venv/bin/ruff check . && .venv/bin/pyright --level error",
 			"group": "build"
+		},
+		{
+			"label": "quick lint+type check",
+			"type": "shell",
+			"command": ".venv/bin/ruff check . && .venv/bin/pyright --level error"
 		}
 	],
 	"inputs": [

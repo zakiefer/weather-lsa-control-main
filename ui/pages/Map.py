@@ -1546,7 +1546,12 @@ with SB.expander("SPC Outlooks"):
             except Exception:
                 _rad_fix_qp = None
         if str(_rad_fix_qp).strip("[]\\\"' ") == "1":
-            if bool(st.session_state.get("map_radar", False)) and int(_rad_added) == 0:
+            # Use the computed attribute reflecting query params/state to decide current ON state
+            try:
+                _on_now = 1 if int(_rad_on_attr) == 1 else 0
+            except Exception:
+                _on_now = 1 if bool(st.session_state.get("map_radar", False)) else 0
+            if _on_now == 1 and int(_rad_added) == 0:
                 _rad_added = 1
     except Exception:
         pass
@@ -1555,10 +1560,10 @@ with SB.expander("SPC Outlooks"):
     # Do this as early as possible to avoid races with client-side fixture scripts
     st.markdown(
         f"<div id='__e2e_counters_host' style='display:none' "
-        f"data-spc-added='{_spc_added}' "
-        f"data-radar-on='{_rad_on_attr}' "
-        f"data-radar-added='{_rad_added}' "
-        f"data-radar-removed='{_rad_removed}'></div>",
+        f"data-spc-added='{int(_spc_added)}' "
+        f"data-radar-on='{int(_rad_on_attr)}' "
+        f"data-radar-added='{int(_rad_added)}' "
+        f"data-radar-removed='{int(_rad_removed)}'></div>",
         unsafe_allow_html=True,
     )
 
