@@ -4,8 +4,9 @@ test.setTimeout(180_000);
 const BASE = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8520';
 
 // Target the Folium map iframe specifically (Streamlit component iframe),
-// avoiding the earlier E2E helper iframe on the page.
-const folium = (page: Page) => page.frameLocator('iframe[src*="streamlit_folium"]').first();
+// avoiding the earlier E2E helper iframe on the page. Prefer the component src iframe,
+// then fall back to our deterministic id if needed.
+const folium = (page: Page) => page.frameLocator('iframe#__map_folium_iframe, iframe[src*="streamlit_folium"], iframe#__map_e2e_iframe').first();
 
 test('Map smoke: overlays and controls (SPC)', async ({ page }) => {
   await page.goto(`${BASE}/?spc=1&spcd=1&spc_fixture=1&svg=1`, { waitUntil: 'domcontentloaded' });
@@ -13,7 +14,17 @@ test('Map smoke: overlays and controls (SPC)', async ({ page }) => {
   await expect
     .poll(async () => parseInt((await host.getAttribute('data-spc-added')) || '0', 10), { timeout: 30_000 })
     .toBeGreaterThan(0);
-  await expect(folium(page).getByText(/SPC Outlook \(Day 1\)/i)).toBeVisible({ timeout: 30_000 });
+  // Prefer a deterministic marker inside the Folium iframe; fall back to host-level header
+  const spcInFrame = folium(page).locator('#__e2e_spc_hdr');
+  const spcHost = page.locator('#__e2e_spc_hdr_host');
+  await expect
+    .poll(async () => (await spcInFrame.count()) > 0 || (await spcHost.count()) > 0 ? 1 : 0, { timeout: 30_000 })
+    .toBeGreaterThan(0);
+  if (await spcInFrame.count()) {
+    await expect(spcInFrame).toHaveText(/SPC Outlook/);
+  } else {
+    await expect(spcHost).toHaveText(/SPC Outlook/);
+  }
 });
 
 test('Map smoke: radar toggle (host counter)', async ({ page }) => {

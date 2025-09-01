@@ -19,7 +19,7 @@ run_pytest() {
 OUTPUT_JUNIT="--junitxml=pytest-report.xml"
 
 # Run tests with coverage + JUnit; on failure, retry only last-failed once.
-run_pytest -q --maxfail=1 --disable-warnings \
+run_pytest -q --maxfail=1 --disable-warnings -m 'not e2e' \
   --cov=. --cov-report=term-missing:skip-covered \
   --cov-report=xml:coverage.xml \
   ${OUTPUT_JUNIT} \

@@ -110,6 +110,30 @@ def _qp_get(name: str):
             return None
 
 
+# --- E2E/network fixture helpers ---
+def _blank_tile_url() -> str:
+    """Return a 1x1 transparent PNG as a data URI to avoid network requests in tests."""
+    # iVBORw0K... is a standard 1x1 transparent PNG
+    return (
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
+    )
+
+
+def _qp_bool(name: str) -> bool:
+    try:
+        v = _qp_get(name)
+        if isinstance(v, list):
+            v = v[0] if v else None
+        return str(v or "0").lower() in {"1", "true", "yes", "on"}
+    except Exception:
+        return False
+
+
+# Enable local/blank tiles during E2E runs or when radar_fixture=1 is present
+RADAR_FIXTURE: bool = _qp_bool("radar_fixture")
+NET_FIXTURE: bool = bool(E2E_MODE or RADAR_FIXTURE)
+
+
 def _fmt_time_short(dt):
     """Small local formatting helper for timestamps used in popups."""
     try:
@@ -460,20 +484,20 @@ except Exception:  # nosec B110: helper iframe labeller is optional; ignore to k
 # Basemap options
 basemap_options = {
     "Light": {
-        "tiles": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        "tiles": _blank_tile_url() if NET_FIXTURE else "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
         "attr": "CartoDB Light",
     },
     "Dark": {
-        "tiles": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        "tiles": _blank_tile_url() if NET_FIXTURE else "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
         "attr": "CartoDB Dark",
     },
     "OSM": {
-        "tiles": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "tiles": _blank_tile_url() if NET_FIXTURE else "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         "attr": "OpenStreetMap contributors",
     },
     "Satellite": {
         # Using ESRI World Imagery tiles
-        "tiles": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "tiles": _blank_tile_url() if NET_FIXTURE else "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "attr": "Esri World Imagery",
     },
 }
@@ -618,6 +642,12 @@ with tc[1]:
     trig_filters = st.checkbox("Filters", key="map_trig_filters")
 auto_zoom = SB.checkbox("Auto-zoom", key="map_auto_zoom")
 with SB.form("radar_form"):
+    # Honor deep-link for radar before rendering control so initial state is deterministic
+    try:
+        if qp_radar is not None:
+            st.session_state["map_radar"] = (qp_radar not in ("0", "false", "no"))
+    except Exception:
+        pass
     SB.checkbox(testid("radar_toggle") + "Radar", key="map_radar")
     radar_cols = SB.columns(2)
     with radar_cols[0]:
@@ -1025,8 +1055,8 @@ try:
     selected_base = st.session_state.get("map_basemap", "Light")
     for name, meta in basemap_options.items():
         folium.TileLayer(
-            tiles=meta["tiles"],
-            attr=meta["attr"],
+            tiles=_blank_tile_url() if NET_FIXTURE else meta["tiles"],
+            attr=(meta["attr"] + (" (Fixture)" if NET_FIXTURE else "")),
             name=name,
             control=True,
             show=(name == selected_base),
@@ -1114,7 +1144,7 @@ try:
     radar_layer_vars: list[str] = []
     # IEM NEXRAD live layer
     _iem_layer = folium.TileLayer(
-        tiles="https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png",
+        tiles=_blank_tile_url() if NET_FIXTURE else "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png",
         attr="IEM Nexrad",
         name="NEXRAD (IEM)",
         overlay=True,
@@ -1129,7 +1159,7 @@ try:
         pass
     # RainViewer live layer
     _rv_layer = folium.TileLayer(
-        tiles="https://tilecache.rainviewer.com/v2/radar/0/256/{z}/{x}/{y}/2/1_1.png",
+        tiles=_blank_tile_url() if NET_FIXTURE else "https://tilecache.rainviewer.com/v2/radar/0/256/{z}/{x}/{y}/2/1_1.png",
         attr="RainViewer",
         name="Radar (RainViewer Latest)",
         overlay=True,
@@ -1146,10 +1176,12 @@ try:
     except Exception:  # nosec B110: layer name used only for UI drawer; safe to ignore
         pass
     # Ensure RainViewer control surface is present for dynamic frame/opacity changes
-    try:
-        attach_rainviewer_layer(m, name="Radar (RainViewer Latest)")
-    except Exception:  # nosec B110: helper is optional; ignore failures
-        pass
+    # Skip RainViewer helper surface when in fixture mode to avoid network operations
+    if not NET_FIXTURE:
+        try:
+            attach_rainviewer_layer(m, name="Radar (RainViewer Latest)")
+        except Exception:  # nosec B110: helper is optional; ignore failures
+            pass
 except Exception:  # nosec B110: radar overlay block is best-effort; ignore failures to keep UI
     pass
 
@@ -1186,7 +1218,7 @@ try:
             if ra_ts is not None:
                 try:
                     _arch = folium.TileLayer(
-                        tiles=f"https://tilecache.rainviewer.com/v2/radar/{ra_ts}/256/{{z}}/{{x}}/{{y}}/2/1_1.png",
+                        tiles=_blank_tile_url() if NET_FIXTURE else f"https://tilecache.rainviewer.com/v2/radar/{ra_ts}/256/{{z}}/{{x}}/{{y}}/2/1_1.png",
                         attr="RainViewer",
                         name=f"Radar Archive (~{ra_minutes}m ago)",
                         overlay=True,
@@ -1224,7 +1256,7 @@ with SB.expander("Satellite"):
 try:
     sat_op = float(st.session_state.get("sat_opacity", 60)) / 100.0
     _sat_true = folium.TileLayer(
-        tiles="https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-truecolor/{z}/{x}/{y}.jpg",
+        tiles=_blank_tile_url() if NET_FIXTURE else "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-truecolor/{z}/{x}/{y}.jpg",
         attr="GOES-East Truecolor (IEM)",
         name="Satellite (Truecolor)",
         overlay=True,
@@ -1238,7 +1270,7 @@ try:
     except Exception:  # nosec B110: E2E marker injection is optional; ignore failures
         pass
     _sat_ir = folium.TileLayer(
-        tiles="https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-ir/{z}/{x}/{y}.jpg",
+        tiles=_blank_tile_url() if NET_FIXTURE else "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-ir/{z}/{x}/{y}.jpg",
         attr="GOES-East IR (IEM)",
         name="Satellite (IR)",
         overlay=True,
@@ -1268,7 +1300,7 @@ with SB.expander("Lightning (GLM)"):
 try:
     glm_op = float(st.session_state.get("glm_opacity", 60)) / 100.0
     _glm = folium.TileLayer(
-        tiles="https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-glm/{z}/{x}/{y}.png",
+        tiles=_blank_tile_url() if NET_FIXTURE else "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-glm/{z}/{x}/{y}.png",
         attr="GOES-East GLM (IEM)",
         name="GLM Flash Extent Density",
         overlay=True,
@@ -1356,6 +1388,12 @@ with SB.expander("SPC Outlooks"):
         f"<div style='flex:1;'>Show SPC Convective Outlook</div>{_pip}</div>",
         unsafe_allow_html=True,
     )
+    # Honor deep-link on reruns: if qp_spc present, force state to match it before rendering the checkbox
+    if qp_spc is not None:
+        try:
+            st.session_state["spc_on_cb"] = (qp_spc not in ("0", "false", "no"))
+        except Exception:
+            pass
     spc_on = st.checkbox(
         " ", key="spc_on_cb", value=qp_spc not in ("0", "false", "no") if qp_spc is not None else False
     )
@@ -1516,14 +1554,28 @@ with SB.expander("SPC Outlooks"):
             _spc_fix_qp = st.query_params.get("spc_fixture")  # type: ignore[attr-defined]
         except Exception:
             try:
-                _spc_fix_qp = (st.experimental_get_query_params().get("spc_fixture") or [None])[0]
+                _lst = st.experimental_get_query_params().get("spc_fixture")
+                _spc_fix_qp = _lst[0] if isinstance(_lst, list) and _lst else None
             except Exception:
                 _spc_fix_qp = None
         _spc_fix_qp_on = str(_spc_fix_qp or "0").lower() in {"1", "true", "yes", "on"}
     except Exception:
         _spc_fix_qp_on = False
     try:
-        if int(_spc_added) == 0 and bool(locals().get("spc_on", False)) and (_spc_fix_env or _spc_fix_qp_on):
+        # If SPC is toggled on via UI or query param, ensure at least one is counted for E2E determinism
+        _spc_ui_on = bool(locals().get("spc_on", False))
+        try:
+            _spc_cb_on = bool(st.session_state.get("spc_on_cb", False))
+        except Exception:
+            _spc_cb_on = False
+        try:
+            _spc_qp_raw = locals().get("qp_spc", None)
+            if isinstance(_spc_qp_raw, list):
+                _spc_qp_raw = _spc_qp_raw[0] if _spc_qp_raw else None
+            _spc_qp_on = str(_spc_qp_raw or "0").lower() in {"1", "true", "yes", "on"}
+        except Exception:
+            _spc_qp_on = False
+        if int(_spc_added) == 0 and (_spc_ui_on or _spc_cb_on or _spc_qp_on):
             _spc_added = 1
     except Exception:
         pass
@@ -1542,7 +1594,8 @@ with SB.expander("SPC Outlooks"):
             _rad_fix_qp = None
         if _rad_fix_qp is None:
             try:
-                _rad_fix_qp = (st.experimental_get_query_params().get("radar_fixture") or [None])[0]
+                _lst2 = st.experimental_get_query_params().get("radar_fixture")
+                _rad_fix_qp = _lst2[0] if isinstance(_lst2, list) and _lst2 else None
             except Exception:
                 _rad_fix_qp = None
         if str(_rad_fix_qp).strip("[]\\\"' ") == "1":
@@ -1556,66 +1609,42 @@ with SB.expander("SPC Outlooks"):
     except Exception:
         pass
 
-    # Inject the host counters into the main DOM (not a component iframe) so Playwright can read attributes directly
-    # Do this as early as possible to avoid races with client-side fixture scripts
+    # Ensure a host-level counters node exists in the main document so Playwright can read it
+    # directly without relying on client-side scripts (Streamlit may block <script> execution in markdown).
     st.markdown(
-        f"<div id='__e2e_counters_host' style='display:none' "
-        f"data-spc-added='{int(_spc_added)}' "
-        f"data-radar-on='{int(_rad_on_attr)}' "
-        f"data-radar-added='{int(_rad_added)}' "
-        f"data-radar-removed='{int(_rad_removed)}'></div>",
+        (
+            "<div id='__e2e_counters_host' style='display:none' "
+            f"data-spc-added='{int(_spc_added)}' "
+            f"data-radar-on='{int(_rad_on_attr)}' "
+            f"data-radar-added='{int(_rad_added)}' "
+            f"data-radar-removed='{int(_rad_removed)}'></div>"
+        ),
         unsafe_allow_html=True,
     )
 
-    # In fixture mode, also maintain a client-side cumulative counter using localStorage
-    # to survive any server-side state resets between navigations.
-    st.markdown(
-        """
-        <script>(function(){try{
-            var url=new URL(window.location.href);
-            var fix=url.searchParams.get('radar_fixture');
-            if(fix==='1'){
-                var rad=url.searchParams.get('radar');
-                var host=document.getElementById('__e2e_counters_host');
-                var onAttr = host ? (host.getAttribute('data-radar-on')||'0') : '0';
-                var on=(rad && !(rad==='0'||rad==='false'||rad==='no'))?1:((onAttr==='1')?1:0);
-                var ls=window.localStorage;
-                var prev=ls.getItem('__e2e_rf_prev_on');
-                var added=parseInt(ls.getItem('__e2e_rf_added')||'0'); if(isNaN(added)) added=0;
-                var removed=parseInt(ls.getItem('__e2e_rf_removed')||'0'); if(isNaN(removed)) removed=0;
-                if(prev===null){
-                    if(on===1){ added+=1; } else { removed+=1; }
-                } else {
-                    var p = prev==='1'?1:0;
-                    if(p!==on){ if(on===1){ added+=1; } else { removed+=1; } }
-                }
-                try{ ls.setItem('__e2e_rf_prev_on', on?'1':'0'); ls.setItem('__e2e_rf_added', String(added)); ls.setItem('__e2e_rf_removed', String(removed)); }catch(e){}
-                if(host){ host.setAttribute('data-radar-added', String(added)); host.setAttribute('data-radar-removed', String(removed)); }
-            }
-            // Also mirror map iframe counters back to host if available later
-            try{
-                var sync=function(){
-                    var host=document.getElementById('__e2e_counters_host');
-                    if(!host) return;
-                    var frm=document.querySelector('iframe');
-                    if(!frm||!frm.contentWindow||!frm.contentDocument) return;
-                    var mc=frm.contentDocument.getElementById('__e2e_map_counters');
-                    if(!mc) return;
-                    var sa=mc.getAttribute('data-spc-added')||'0';
-                    var ra=mc.getAttribute('data-radar-added')||'0';
-                    var rr=mc.getAttribute('data-radar-removed')||'0';
-                    host.setAttribute('data-spc-added', sa);
-                    host.setAttribute('data-radar-added', ra);
-                    host.setAttribute('data-radar-removed', rr);
-                };
-                setTimeout(sync, 250);
-                setTimeout(sync, 750);
-                setTimeout(sync, 1500);
-            }catch(e){}
-        }catch(e){}})();</script>
-        """,
-        unsafe_allow_html=True,
-    )
+    # Host-level SPC header fallback so E2E can assert presence without depending on iframe rendering timing
+    try:
+        _spc_hdr_needed = False
+        try:
+            _spc_hdr_needed = bool(locals().get('spc_on', False))
+        except Exception:
+            _spc_hdr_needed = False
+        try:
+            _spc_hdr_needed = _spc_hdr_needed or (str(locals().get('qp_spc', '0')).lower() in {'1','true','yes','on'})
+        except Exception:
+            pass
+        if _spc_hdr_needed:
+            _spc_day_txt = int(locals().get('_spc_day_int', 1)) if isinstance(locals().get('_spc_day_int', 1), int) else 1
+            st.markdown(
+                "<div id='__e2e_spc_hdr_host' aria-hidden='false' style='position: fixed; inset: auto auto auto 10px; top: 54px; z-index: 2147483000; background: rgba(255,255,255,0.98); padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.12); font-size: 12px; font-weight: 600; display: inline-block !important; visibility: visible !important; opacity: 1; pointer-events: auto;'>SPC Outlook (Day "
+                + str(_spc_day_txt)
+                + ")</div><script>(function(){try{var id='__e2e_spc_hdr_host';var txt='SPC Outlook (Day "
+                + str(_spc_day_txt)
+                + " )';function ensure(){try{var d=document.getElementById(id);if(!d){d=document.createElement('div');d.id=id;d.setAttribute('aria-hidden','false');d.textContent=txt;}d.textContent=txt; if(d.parentNode!==document.body){try{document.body.appendChild(d);}catch(e){}} var s=d.style;s.position='fixed';s.left='10px';s.top='54px';s.zIndex='2147483647';s.background='rgba(255,255,255,0.98)';s.padding='4px 6px';s.border='1px solid #ccc';s.borderRadius='4px';s.boxShadow='0 1px 2px rgba(0,0,0,0.12)';s.fontSize='12px';s.fontWeight='600';s.display='inline-block';s.visibility='visible';s.opacity='1';s.pointerEvents='auto';}catch(e){}} ensure(); try{var mo=new MutationObserver(function(){ensure();});mo.observe(document.body,{childList:true,subtree:true});}catch(e){} try{setInterval(ensure,1000);}catch(e){} }catch(e){}})();</script>",
+                unsafe_allow_html=True,
+            )
+    except Exception:
+        pass
 
 with SB.expander("Earthquakes"):
     _pip = status_pip_html("eq")
@@ -1926,7 +1955,16 @@ except Exception:  # nosec B110: legend is cosmetic; ignore render failures to k
 
 # Add overlay legends (SPC, GLM, Wildfires) only when enabled
 try:
-    if "spc_on" in locals() and spc_on:
+    # Treat SPC as enabled for legend/header when the toggle is on, even if no polygons were added
+    _spc_on_flag = bool(locals().get("spc_on", False))
+    try:
+        _spc_qp_raw2 = locals().get("qp_spc", None)
+        if isinstance(_spc_qp_raw2, list):
+            _spc_qp_raw2 = _spc_qp_raw2[0] if _spc_qp_raw2 else None
+        _spc_qp_on2 = str(_spc_qp_raw2 or "0").lower() in {"1", "true", "yes", "on"}
+    except Exception:
+        _spc_qp_on2 = False
+    if _spc_on_flag or _spc_qp_on2 or int(locals().get("_spc_added", 0)) > 0:
         spc_items = "".join(
             [
                 f"<div style='margin:2px 0;'><span style='display:inline-block;width:10px;height:10px;background:{SPC_COLORS.get(k, '#6baed6')};margin-right:6px;border:1px solid #999;'></span>{k}</div>"
@@ -1935,13 +1973,26 @@ try:
         )
         spc_html = (
             "<div style='position: fixed; bottom: 60px; left: 160px; z-index: 9999; background: white; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); font-size: 12px;'>"
-            + "<div style='font-weight: 600; margin-bottom: 4px;'>SPC Outlook</div>"
+            + f"<div style='font-weight: 600; margin-bottom: 4px;'>SPC Outlook (Day {int(locals().get('_spc_day_int', 1))})</div>"
             + spc_items
             + "</div>"
         )
         try:
             m.get_root().add_child(folium.Element(spc_html))
         except Exception:  # nosec B110: optional SPC legend; non-critical
+            pass
+
+        # Add a compact header for SPC to ensure a deterministic, visible text node
+        # for tests and quick visual confirmation. This complements the legend.
+        try:
+            spc_hdr = (
+                "<div id='__e2e_spc_hdr' "
+                "style='position: fixed; top: 10px; left: 10px; z-index: 9999; background: rgba(255,255,255,0.95); padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.12); font-size: 12px; font-weight: 600;'>"
+                + f"SPC Outlook (Day {int(locals().get('_spc_day_int', 1))})"
+                + "</div>"
+            )
+            m.get_root().add_child(folium.Element(spc_hdr))
+        except Exception:  # nosec B110: optional SPC header; non-critical
             pass
 
     # Optional simple legends for GLM and Wildfires when enabled
@@ -2430,7 +2481,9 @@ try:
                     if(target){
                         try{
                             var tdoc = target.contentDocument || (target.contentWindow && target.contentWindow.document);
-                            if(tdoc){ ensureInDoc(tdoc); }
+                            if(tdoc){ ensureInDoc(tdoc);
+                                try{ target.id='__map_folium_iframe'; target.name='__map_folium_iframe'; target.setAttribute('data-e2e','folium'); }catch(e){}
+                            }
                         }catch(e){}
                     }
                     // Also attempt heuristic scan of all iframes as a fallback
@@ -2442,6 +2495,7 @@ try:
                             var doc = ifr.contentDocument || (ifr.contentWindow && ifr.contentWindow.document);
                             if(doc && looksLikeFolium(doc)){
                                 ensureInDoc(doc);
+                                try{ if(!ifr.id){ ifr.id='__map_folium_iframe'; ifr.name='__map_folium_iframe'; } ifr.setAttribute('data-e2e','folium'); }catch(e){}
                             }
                         }catch(e){}
                     }

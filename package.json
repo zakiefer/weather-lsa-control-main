@@ -22,8 +22,9 @@
     "sentry:http:stop": "bash -lc 'PID=$(cat logs/sentry.pid 2>/dev/null || true); [ -n \"$PID\" ] && kill $PID 2>/dev/null || true; rm -f logs/sentry.pid'",
     "sentry:probe": "node tools/sentry_http_probe.mjs",
     "sentry:diag": "node tools/sentry_token_diag.mjs",
-    "e2e": "node e2e-runner.mjs",
-    "test:e2e": "playwright test -g 'Map smoke'"
+  "e2e": "node e2e-runner.mjs",
+  "test:e2e": "playwright test -g 'Map smoke'",
+  "test:e2e:all": "playwright test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
