@@ -13,12 +13,27 @@
 				"cwd": "${workspaceFolder}"
 			},
 			"isBackground": true,
+			"problemMatcher": {
+				"owner": "custom-streamlit",
+				"pattern": [
+					{
+						"regexp": ".*",
+						"file": 1,
+						"line": 1,
+						"message": 0
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^Starting Streamlit Map on http://localhost:8501$",
+					"endsPattern": "^Running on http://localhost:8501$"
+				}
+			},
 			"presentation": {
 				"reveal": "always",
 				"panel": "shared",
 				"clear": true
-			},
-			"problemMatcher": []
+			}
 		},
 		{
 			"label": "Stop Map Page",
@@ -26,7 +41,7 @@
 			"command": "bash",
 			"args": [
 				"-lc",
-				"set -euo pipefail; [ -f tmp/streamlit_map.pid ] && kill $(cat tmp/streamlit_map.pid) 2>/dev/null || true; rm -f tmp/streamlit_map.pid; for p in 8501 8502 8503; do pids=$(lsof -nP -iTCP:$p -sTCP:LISTEN -Fp 2>/dev/null | sed 's/^p//'); [ -n \"$pids\" ] && kill $pids 2>/dev/null || true; done; pkill -f 'streamlit run ui/pages/Map.py' 2>/dev/null || true; echo 'Stopped Streamlit on :8501-:8503 (if running)';"
+				"chmod +x scripts/stop_map.sh; scripts/stop_map.sh"
 			],
 			"presentation": {
 				"reveal": "never",
