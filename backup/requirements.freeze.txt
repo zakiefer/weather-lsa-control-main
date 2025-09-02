@@ -144,7 +144,7 @@ uvicorn==0.35.0
 uvloop==0.21.0
 virtualenv==20.34.0
 watchdog==4.0.1
--e git+https://github.com/zakiefer/weather-lsa-control-main.git@d706227e96c9ace0471ad001e02ad503d6ff5f7e#egg=weather_lsa_control
+-e git+https://github.com/zakiefer/weather-lsa-control-main.git@aa7acaf49944426d5be26d3cdeb0795bb9665c12#egg=weather_lsa_control
 webencodings==0.5.1
 wheel==0.45.1
 wrapt==1.17.3
