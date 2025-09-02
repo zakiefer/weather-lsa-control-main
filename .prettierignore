@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+htmlcov
+playwright-report
+playwright-report-real
+**/.next
+**/out

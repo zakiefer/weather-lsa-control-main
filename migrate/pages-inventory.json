@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Dashboard",
+    "route": "/dashboard",
+    "widgets": ["filters", "dateRange"],
+    "charts": ["metrics", "trend"],
+    "dataSources": ["src.db", "src.metrics"],
+    "sidebars": ["summary"],
+    "downloads": [],
+    "longOps": []
+  },
+  {"title": "Map", "route": "/map", "widgets": ["layers", "timeline", "opacity"], "charts": [], "dataSources": ["ui.layers.*", "weather APIs"], "sidebars": ["opacity", "layer toggles"], "downloads": [], "longOps": []},
+  {"title": "Live", "route": "/live", "widgets": ["stateSelect"], "charts": [], "dataSources": ["src.weather_monitor"], "sidebars": [], "downloads": ["json"], "longOps": []},
+  {"title": "History", "route": "/history", "widgets": ["search", "export"], "charts": [], "dataSources": ["db"], "sidebars": [], "downloads": ["csv", "json"], "longOps": []},
+  {"title": "Reports", "route": "/reports", "widgets": ["gaql", "filters"], "charts": ["timeseries", "bar"], "dataSources": ["lsa_reporting"], "sidebars": ["sections"], "downloads": ["json"], "longOps": ["reportBuild"]},
+  {"title": "Ads", "route": "/ads", "widgets": ["campaignToggle", "killSwitch"], "charts": [], "dataSources": ["ads_service"], "sidebars": [], "downloads": [], "longOps": ["bulkUpdate"]},
+  {"title": "Settings", "route": "/settings", "widgets": ["flags", "thresholds", "cacheClear"], "charts": [], "dataSources": ["db"], "sidebars": [], "downloads": [], "longOps": []},
+  {"title": "Profile", "route": "/profile", "widgets": ["updateProfile", "passwordReset"], "charts": [], "dataSources": ["auth"], "sidebars": [], "downloads": [], "longOps": []},
+  {"title": "Health", "route": "/health", "widgets": [], "charts": [], "dataSources": ["src.health"], "sidebars": [], "downloads": [], "longOps": []}
+]

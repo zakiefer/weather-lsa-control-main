@@ -5,48 +5,41 @@
 			"label": "Run Map Page",
 			"type": "shell",
 			"command": "bash",
-			"args": [
-				"-lc",
-				"chmod +x scripts/run_map.sh; scripts/run_map.sh"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}"
-			},
-			"isBackground": true,
-			"problemMatcher": {
-				"owner": "custom-streamlit",
-				"pattern": [
-					{
-						"regexp": ".*",
-						"file": 1,
-						"line": 1,
-						"message": 0
-					}
-				],
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": "^Starting Streamlit Map on http://localhost:8501$",
-					"endsPattern": "^Running on http://localhost:8501$"
-				}
-			},
-			"presentation": {
-				"reveal": "always",
-				"panel": "shared",
-				"clear": true
-			}
+			"args": ["-lc", "chmod +x scripts/run_map.sh; scripts/run_map.sh"],
+			"options": { "cwd": "${workspaceFolder}" }
 		},
 		{
 			"label": "Stop Map Page",
 			"type": "shell",
 			"command": "bash",
-			"args": [
-				"-lc",
-				"chmod +x scripts/stop_map.sh; scripts/stop_map.sh"
-			],
-			"presentation": {
-				"reveal": "never",
-				"panel": "shared"
-			}
+			"args": ["-lc", "chmod +x scripts/stop_map.sh; scripts/stop_map.sh"]
+		},
+		{
+			"label": "Run Map Page",
+			"type": "shell",
+			"command": "bash",
+			"args": ["-lc", "chmod +x scripts/run_map.sh; scripts/run_map.sh"],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "api:dev",
+			"type": "shell",
+			"command": "bash",
+			"args": ["-lc", "cd apps/api && uvicorn app.main:app --reload --port 8000"],
+			"isBackground": true
+		},
+		{
+			"label": "web:dev",
+			"type": "shell",
+			"command": "pnpm",
+			"args": ["--filter", "@weather-lsa/web", "dev"],
+			"isBackground": true
+		},
+		{
+			"label": "dev:all",
+			"dependsOn": ["api:dev", "web:dev"],
+			"dependsOrder": "parallel"
 		}
 	]
 }

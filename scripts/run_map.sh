@@ -35,16 +35,8 @@ fi
 # Kill any stray Streamlit processes for this Map page
 pkill -f 'streamlit run ui/pages/Map.py' 2>/dev/null || true
 
-# Choose first available port
-PORT=""
-for p in 8501 8502 8503; do
-  if ! lsof -nP -iTCP:${p} -sTCP:LISTEN >/dev/null 2>&1; then PORT=${p}; break; fi
-done
-if [ -z "$PORT" ]; then
-  echo "All ports 8501-8503 are busy. Stop existing servers first." >&2
-  exit 1
-fi
-
+# Use fixed port 8501 for the one-click task
+PORT=8501
 URL="http://localhost:${PORT}"
 echo "Starting Streamlit Map on ${URL}"
 

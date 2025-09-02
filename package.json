@@ -1,8 +1,21 @@
 {
-  "name": "weather-lsa-control-root",
+  "name": "weather-lsa-control-monorepo",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.10.0",
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r --parallel run dev",
+    "lint": "pnpm -r run lint",
+    "format": "pnpm -r run format",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down -v",
+    "e2e": "node e2e-runner.mjs",
+    "test:e2e": "playwright test -g 'Map smoke'",
+    "test:e2e:all": "playwright test",
     "mcp:figma:http": "zsh -lc 'source ./scripts/ops/load_env.zsh && node mcp/figma-server-http.js'",
     "mcp:figma:http:dev": "nodemon --quiet --watch mcp/figma-server-http.js --exec node mcp/figma-server-http.js",
     "figma:auth:probe": "node scripts/figma/auth_probe.mjs",
@@ -10,7 +23,6 @@
     "mcp:figma:http:start": "zsh -lc 'mkdir -p logs; source ./scripts/ops/load_env.zsh; node mcp/figma-server-http.js 1>>logs/figma.stdout 2>>logs/figma.stderr & echo $! > logs/figma.pid'",
     "mcp:figma:http:status": "bash -lc 'PID=$(cat logs/figma.pid 2>/dev/null || true); if [ -n \"$PID\" ] && kill -0 $PID 2>/dev/null; then echo RUNNING:$PID; else echo STOPPED; fi; lsof -nP -iTCP:3845 -sTCP:LISTEN || true; curl -sS -o /dev/null -w \"HEALTH_%{http_code}\\n\" http://127.0.0.1:3845/health || echo HEALTH_000'",
     "mcp:figma:http:stop": "bash -lc 'PID=$(cat logs/figma.pid 2>/dev/null || true); [ -n \"$PID\" ] && kill $PID 2>/dev/null || true; rm -f logs/figma.pid'",
-    "test:ci": "bash scripts/run_pytest.sh",
     "apify:probe": "zsh -lc 'source ./scripts/ops/load_env.zsh 2>/dev/null || true; node tools/apify_http_probe.mjs'",
     "apify:search-details": "zsh -lc 'source ./scripts/ops/load_env.zsh 2>/dev/null || true; node tools/apify_search_details.mjs'",
     "apify:search-plan": "zsh -lc 'source ./scripts/ops/load_env.zsh 2>/dev/null || true; node tools/apify_search_plan.mjs'",
@@ -21,10 +33,7 @@
     "sentry:http:status": "bash -lc 'PID=$(cat logs/sentry.pid 2>/dev/null || true); if [ -n \"$PID\" ] && kill -0 $PID 2>/dev/null; then echo RUNNING:$PID; else echo STOPPED; fi; lsof -nP -iTCP:3999 -sTCP:LISTEN || true; curl -sS -o /dev/null -w \"HEALTH_%{http_code}\\n\" http://127.0.0.1:3999/health || echo HEALTH_000'",
     "sentry:http:stop": "bash -lc 'PID=$(cat logs/sentry.pid 2>/dev/null || true); [ -n \"$PID\" ] && kill $PID 2>/dev/null || true; rm -f logs/sentry.pid'",
     "sentry:probe": "node tools/sentry_http_probe.mjs",
-    "sentry:diag": "node tools/sentry_token_diag.mjs",
-  "e2e": "node e2e-runner.mjs",
-  "test:e2e": "playwright test -g 'Map smoke'",
-  "test:e2e:all": "playwright test"
+    "sentry:diag": "node tools/sentry_token_diag.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
