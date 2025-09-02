@@ -6,6 +6,7 @@ from typing import Optional
 import os
 import json
 import logging
+import app.tiles as tiles_router
 
 app = FastAPI(title="Weather LSA Control API", version="0.1.0")
 
@@ -76,6 +77,7 @@ def alerts_live(states: Optional[str] = None, user: User = Depends(get_current_u
 
 
 app.include_router(v1)
+app.include_router(tiles_router.router)
 
 
 # Error handlers
