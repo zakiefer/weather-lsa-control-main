@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, Request, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,6 +7,8 @@ import os
 import json
 import logging
 import app.tiles as tiles_router
+import app.overlays as overlays_router
+import app.pages as pages_router
 
 app = FastAPI(title="Weather LSA Control API", version="0.1.0")
 
@@ -60,12 +62,26 @@ v1 = APIRouter(prefix="/v1")
 
 
 @v1.get("/map/state")
-def map_state(user: User = Depends(get_current_user)):
+def map_state(request: Request, user: User = Depends(get_current_user)):
     # Minimal MapState compatible shape for initial wiring
+    # Compute absolute API base for tile URLs
+    host = request.headers.get("host") or request.url.netloc
+    scheme = request.url.scheme
+    api_base = f"{scheme}://{host}"
+    is_fixture = bool(int(os.getenv("E2E_FIXTURE", "0")))
+    fx_q = "?fixture=1" if is_fixture else ""
     return {
         "center": [37.8, -96.9],
         "zoom": 4,
-        "opacities": {}
+        "opacities": {},
+        "tiles": {
+            "radar": f"{api_base}/v1/overlays/radar/{{z}}/{{x}}/{{y}}.png{fx_q}",
+            "sat_true": f"{api_base}/v1/overlays/sat/true/{{z}}/{{x}}/{{y}}.jpg{fx_q}",
+            "sat_ir": f"{api_base}/v1/overlays/sat/ir/{{z}}/{{x}}/{{y}}.jpg{fx_q}",
+            "osm": f"{api_base}/v1/tiles/osm/{{z}}/{{x}}/{{y}}.png",
+            "fixture": f"{api_base}/v1/tiles/fixture/{{z}}/{{x}}/{{y}}.png",
+        },
+        "fixture": is_fixture,
     }
 
 
@@ -78,6 +94,8 @@ def alerts_live(states: Optional[str] = None, user: User = Depends(get_current_u
 
 app.include_router(v1)
 app.include_router(tiles_router.router)
+app.include_router(overlays_router.router)
+app.include_router(pages_router.router)
 
 
 # Error handlers
@@ -87,4 +105,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={"error": exc.detail, "status": exc.status_code},
     )
+
+# Optional versioned health for consistency
+@v1.get("/health")
+def v1_health():
+    return {"ok": True}
 
