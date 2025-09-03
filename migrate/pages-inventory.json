@@ -1,20 +1,848 @@
 [
   {
-    "title": "Dashboard",
-    "route": "/dashboard",
-    "widgets": ["filters", "dateRange"],
-    "charts": ["metrics", "trend"],
-    "dataSources": ["src.db", "src.metrics"],
-    "sidebars": ["summary"],
-    "downloads": [],
-    "longOps": []
+    "route": "/Ads",
+    "title": "Ads",
+    "description": null,
+    "widgets": [
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "selectbox",
+        "label": null
+      },
+      {
+        "type": "toggle",
+        "label": null
+      },
+      {
+        "type": "toggle",
+        "label": null
+      },
+      {
+        "type": "toggle",
+        "label": null
+      },
+      {
+        "type": "toggle",
+        "label": null
+      }
+    ],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Ads.py"
   },
-  {"title": "Map", "route": "/map", "widgets": ["layers", "timeline", "opacity"], "charts": [], "dataSources": ["ui.layers.*", "weather APIs"], "sidebars": ["opacity", "layer toggles"], "downloads": [], "longOps": []},
-  {"title": "Live", "route": "/live", "widgets": ["stateSelect"], "charts": [], "dataSources": ["src.weather_monitor"], "sidebars": [], "downloads": ["json"], "longOps": []},
-  {"title": "History", "route": "/history", "widgets": ["search", "export"], "charts": [], "dataSources": ["db"], "sidebars": [], "downloads": ["csv", "json"], "longOps": []},
-  {"title": "Reports", "route": "/reports", "widgets": ["gaql", "filters"], "charts": ["timeseries", "bar"], "dataSources": ["lsa_reporting"], "sidebars": ["sections"], "downloads": ["json"], "longOps": ["reportBuild"]},
-  {"title": "Ads", "route": "/ads", "widgets": ["campaignToggle", "killSwitch"], "charts": [], "dataSources": ["ads_service"], "sidebars": [], "downloads": [], "longOps": ["bulkUpdate"]},
-  {"title": "Settings", "route": "/settings", "widgets": ["flags", "thresholds", "cacheClear"], "charts": [], "dataSources": ["db"], "sidebars": [], "downloads": [], "longOps": []},
-  {"title": "Profile", "route": "/profile", "widgets": ["updateProfile", "passwordReset"], "charts": [], "dataSources": ["auth"], "sidebars": [], "downloads": [], "longOps": []},
-  {"title": "Health", "route": "/health", "widgets": [], "charts": [], "dataSources": ["src.health"], "sidebars": [], "downloads": [], "longOps": []}
+  {
+    "route": "/Health",
+    "title": "Health",
+    "description": null,
+    "widgets": [
+      {
+        "type": "button",
+        "label": null
+      }
+    ],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [
+      "map_resets"
+    ],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Health.py"
+  },
+  {
+    "route": "/History",
+    "title": "History",
+    "description": null,
+    "widgets": [
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "slider",
+        "label": null
+      },
+      {
+        "type": "slider",
+        "label": null
+      },
+      {
+        "type": "text_input",
+        "label": ""
+      }
+    ],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [
+      "hist_auto_refresh",
+      "hist_refresh_sec"
+    ],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [
+      "raw_style_rendered"
+    ],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/History.py"
+  },
+  {
+    "route": "/Live",
+    "title": "Live",
+    "description": null,
+    "widgets": [
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": "Show link"
+      },
+      {
+        "type": "multiselect",
+        "label": null
+      },
+      {
+        "type": "selectbox",
+        "label": null
+      },
+      {
+        "type": "slider",
+        "label": null
+      },
+      {
+        "type": "text_input",
+        "label": null
+      }
+    ],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [
+      "ls_auto_refresh",
+      "ls_filter",
+      "ls_refresh_sec",
+      "ls_states"
+    ],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [
+      "raw_style_rendered",
+      "map_resets"
+    ],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Live.py"
+  },
+  {
+    "route": "/Map",
+    "title": "Map",
+    "description": null,
+    "widgets": [
+      {
+        "type": "button",
+        "label": "Clear HTTP caches (quick)"
+      },
+      {
+        "type": "button",
+        "label": "Clear caches + status (full)"
+      },
+      {
+        "type": "button",
+        "label": "Export GeoJSON"
+      },
+      {
+        "type": "button",
+        "label": "Reset map preferences"
+      },
+      {
+        "type": "button",
+        "label": "Zoom to data"
+      },
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": " "
+      },
+      {
+        "type": "checkbox",
+        "label": " "
+      },
+      {
+        "type": "checkbox",
+        "label": " "
+      },
+      {
+        "type": "checkbox",
+        "label": " "
+      },
+      {
+        "type": "checkbox",
+        "label": " "
+      },
+      {
+        "type": "checkbox",
+        "label": " "
+      },
+      {
+        "type": "checkbox",
+        "label": "Approximate tornado paths (connect nearby reports)"
+      },
+      {
+        "type": "checkbox",
+        "label": "Archive mode"
+      },
+      {
+        "type": "checkbox",
+        "label": "Auto-refresh"
+      },
+      {
+        "type": "checkbox",
+        "label": "Auto-zoom"
+      },
+      {
+        "type": "checkbox",
+        "label": "Fast mode"
+      },
+      {
+        "type": "checkbox",
+        "label": "Filters"
+      },
+      {
+        "type": "checkbox",
+        "label": "GOES-East IR"
+      },
+      {
+        "type": "checkbox",
+        "label": "GOES-East Truecolor"
+      },
+      {
+        "type": "checkbox",
+        "label": "Hail"
+      },
+      {
+        "type": "checkbox",
+        "label": "Hide live radar while in archive"
+      },
+      {
+        "type": "checkbox",
+        "label": "History: filter to triggers"
+      },
+      {
+        "type": "checkbox",
+        "label": "Limit to selected events"
+      },
+      {
+        "type": "checkbox",
+        "label": "Loop"
+      },
+      {
+        "type": "checkbox",
+        "label": "Only triggered"
+      },
+      {
+        "type": "checkbox",
+        "label": "Reduce flashing (client-side toggles)"
+      },
+      {
+        "type": "checkbox",
+        "label": "Rules"
+      },
+      {
+        "type": "checkbox",
+        "label": "Show GLM Flash Extent Density"
+      },
+      {
+        "type": "checkbox",
+        "label": "Show link"
+      },
+      {
+        "type": "checkbox",
+        "label": "Tornado"
+      },
+      {
+        "type": "checkbox",
+        "label": "Unified opacity drawer"
+      },
+      {
+        "type": "checkbox",
+        "label": "Use bottom timeline (playable)"
+      },
+      {
+        "type": "checkbox",
+        "label": "Wind"
+      },
+      {
+        "type": "multiselect",
+        "label": "Events"
+      },
+      {
+        "type": "multiselect",
+        "label": "States"
+      },
+      {
+        "type": "selectbox",
+        "label": null
+      },
+      {
+        "type": "selectbox",
+        "label": null
+      },
+      {
+        "type": "selectbox",
+        "label": "Day"
+      },
+      {
+        "type": "slider",
+        "label": null
+      },
+      {
+        "type": "slider",
+        "label": "Hours back"
+      },
+      {
+        "type": "slider",
+        "label": "Hours back"
+      },
+      {
+        "type": "slider",
+        "label": "Min magnitude"
+      },
+      {
+        "type": "slider",
+        "label": "Opacity"
+      },
+      {
+        "type": "slider",
+        "label": "Opacity"
+      },
+      {
+        "type": "slider",
+        "label": "Refresh (sec)"
+      },
+      {
+        "type": "slider",
+        "label": "Time (last 2h)"
+      },
+      {
+        "type": "slider",
+        "label": "Timeline speed"
+      },
+      {
+        "type": "toggle",
+        "label": "Show data source status"
+      }
+    ],
+    "charts": [],
+    "data_sources": [
+      {
+        "type": "http",
+        "url": "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-glm/{z}/{x}/{y}.png",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-ir/{z}/{x}/{y}.jpg",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-truecolor/{z}/{x}/{y}.jpg",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://tilecache.rainviewer.com/v2/radar/0/256/{z}/{x}/{y}/2/1_1.png",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://tilecache.rainviewer.com/v2/radar/{ra_ts}/256/{{z}}/{{x}}/{{y}}/2/1_1.png",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "notes": null
+      }
+    ],
+    "session_state": [
+      "e2e_prev_radar_on",
+      "e2e_radar_added_count",
+      "e2e_radar_removed_count",
+      "glm_on",
+      "glm_opacity",
+      "map_auto_zoom",
+      "map_basemap",
+      "map_cat_filters",
+      "map_events",
+      "map_fast_mode",
+      "map_hist_hours",
+      "map_hist_only_selected",
+      "map_hist_only_triggers",
+      "map_only_triggered",
+      "map_radar",
+      "map_radar_opacity",
+      "map_radar_source",
+      "map_show_hist",
+      "map_trig_filters",
+      "map_trig_rules",
+      "opacity_drawer",
+      "qp_center_last_update_ts",
+      "qp_last_hash_center",
+      "ra_hide_live",
+      "sat_ir",
+      "sat_opacity",
+      "sat_true",
+      "spc_fixture",
+      "spc_on_cb",
+      "states_sel"
+    ],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [
+      "E2E_FORCE_SVG",
+      "E2E_SPC_FIXTURE",
+      "E2E_TEST_IDS"
+    ],
+    "known_issues": [
+      "raw_style_rendered"
+    ],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Map.py"
+  },
+  {
+    "route": "/Profile",
+    "title": "Profile",
+    "description": null,
+    "widgets": [
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "text_input",
+        "label": null
+      },
+      {
+        "type": "text_input",
+        "label": null
+      }
+    ],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [
+      "user"
+    ],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Profile.py"
+  },
+  {
+    "route": "/Reports",
+    "title": "Reports",
+    "description": null,
+    "widgets": [
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": "Try manager-only (ignore account)"
+      },
+      {
+        "type": "checkbox",
+        "label": "Use numeric account ID"
+      },
+      {
+        "type": "date_input",
+        "label": null
+      },
+      {
+        "type": "date_input",
+        "label": null
+      },
+      {
+        "type": "file_uploader",
+        "label": "Upload Local Services Leads CSV export"
+      },
+      {
+        "type": "multiselect",
+        "label": "Category"
+      },
+      {
+        "type": "multiselect",
+        "label": "Charge status"
+      },
+      {
+        "type": "multiselect",
+        "label": "Lead type"
+      },
+      {
+        "type": "toggle",
+        "label": null
+      },
+      {
+        "type": "toggle",
+        "label": null
+      },
+      {
+        "type": "toggle",
+        "label": null
+      }
+    ],
+    "charts": [
+      "altair",
+      "bar"
+    ],
+    "data_sources": [
+      {
+        "type": "io",
+        "url": "pd.read_csv",
+        "notes": "csv"
+      }
+    ],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Reports.py"
+  },
+  {
+    "route": "/Settings",
+    "title": "Settings",
+    "description": null,
+    "widgets": [
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": null
+      },
+      {
+        "type": "button",
+        "label": "Data caches & sources"
+      },
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "checkbox",
+        "label": null
+      },
+      {
+        "type": "number_input",
+        "label": null
+      },
+      {
+        "type": "number_input",
+        "label": null
+      },
+      {
+        "type": "text_input",
+        "label": null
+      }
+    ],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [
+      "_open_caches"
+    ],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [
+      "raw_style_rendered"
+    ],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/Settings.py"
+  },
+  {
+    "route": "/_MapLayers",
+    "title": "Deprecated — Use Map",
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/_MapLayers.py"
+  },
+  {
+    "route": "/_MapLayers_removed",
+    "title": "Deprecated — Use Map",
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/_MapLayers_removed.py"
+  },
+  {
+    "route": "/_MapLayers_visible",
+    "title": "Deprecated — Use Map",
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/_MapLayers_visible.py"
+  },
+  {
+    "route": "/_map_layers",
+    "title": "Deprecated — Use Map",
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/pages/_map_layers.py"
+  },
+  {
+    "route": "/Dashboard",
+    "title": "Dashboard",
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [
+      "raw_style_rendered"
+    ],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/Dashboard.py"
+  },
+  {
+    "route": "/app",
+    "title": "Dashboard",
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/app.py"
+  },
+  {
+    "route": "/http_client",
+    "title": null,
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [
+      {
+        "kind": "sleep",
+        "notes": "time.sleep(delay)"
+      },
+      {
+        "kind": "sleep",
+        "notes": "time.sleep(delay)"
+      }
+    ],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/http_client.py"
+  },
+  {
+    "route": "/map_layers",
+    "title": null,
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [
+      {
+        "type": "http",
+        "url": "https://api.weather.gov/alerts",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://mesonet.agron.iastate.edu/geojson/lsr.php",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://mesonet.agron.iastate.edu/geojson/spc_outlooks.geojson",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/",
+        "notes": null
+      },
+      {
+        "type": "http",
+        "url": "https://www.nhc.noaa.gov/CurrentStorms.json",
+        "notes": null
+      }
+    ],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [
+      "E2E_SPC_FIXTURE"
+    ],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/map_layers.py"
+  },
+  {
+    "route": "/overlay_status",
+    "title": null,
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/overlay_status.py"
+  },
+  {
+    "route": "/testids",
+    "title": null,
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [
+      "E2E_TEST_IDS"
+    ],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/testids.py"
+  },
+  {
+    "route": "/utils",
+    "title": null,
+    "description": null,
+    "widgets": [],
+    "charts": [],
+    "data_sources": [],
+    "session_state": [],
+    "cache": [],
+    "long_jobs": [],
+    "feature_flags": [],
+    "known_issues": [],
+    "file": "/Users/program/Downloads/weather-lsa-control-main/ui/utils.py"
+  }
 ]
